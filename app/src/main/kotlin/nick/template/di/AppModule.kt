@@ -7,7 +7,9 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoSet
 import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import nick.template.data.AndroidAudioPermissionsRepository
 import nick.template.data.AndroidAudioRepository
 import nick.template.data.AudioPermissionsRepository
@@ -25,6 +27,10 @@ interface AppModule {
         @Provides
         @IoContext
         fun ioContext(): CoroutineContext = Dispatchers.IO
+
+        @Provides
+        @AppScope
+        fun appScope(): CoroutineScope = GlobalScope
     }
 
     @Binds

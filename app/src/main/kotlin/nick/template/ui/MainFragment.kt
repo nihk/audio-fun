@@ -27,7 +27,6 @@ import nick.template.ui.extensions.clicks
 
 // todo: probably should have a foreground service for recording
 // todo: don't save to cache, save to app disk space (non-cache) and add an option to copy to Music folder
-// todo: pause/resume on API >= 24. this will mess with the way the repository coroutine flow works, tho
 class MainFragment @Inject constructor(
     private val factory: MainViewModel.Factory
 ) : Fragment(R.layout.main_fragment),

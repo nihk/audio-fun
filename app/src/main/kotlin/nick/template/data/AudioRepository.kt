@@ -10,6 +10,7 @@ import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 import kotlin.math.roundToInt
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -19,7 +20,9 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import nick.template.di.AppScope
 import nick.template.di.IoContext
 
 interface AudioRepository {
@@ -29,8 +32,8 @@ interface AudioRepository {
     suspend fun pause()
     suspend fun resume()
     suspend fun stop()
-    suspend fun deleteFromCache(cachedFilename: CachedFilename)
-    suspend fun save(cachedFilename: CachedFilename, destinationFilename: String, copyToMusicFolder: Boolean)
+    fun deleteFromCache(cachedFilename: CachedFilename)
+    fun save(cachedFilename: CachedFilename, destinationFilename: String, copyToMusicFolder: Boolean)
 
     interface RecordingConfig
 
@@ -42,11 +45,11 @@ interface AudioRepository {
     }
 }
 
-// todo: inject external coroutine context (App-scoped) for file saving/deleting so it's not tied to VM scope
 class AndroidAudioRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     @IoContext private val ioContext: CoroutineContext,
-    private val timestamp: Timestamp
+    private val timestamp: Timestamp,
+    @AppScope private val appScope: CoroutineScope
 ) : AudioRepository {
     private val events = MutableSharedFlow<Event>()
     private var mediaRecorder: MediaRecorder? = null
@@ -129,13 +132,17 @@ class AndroidAudioRepository @Inject constructor(
         return (this / AMPLITUDE_UPPER_BOUND.toFloat() * 100).roundToInt()
     }
 
-    override suspend fun deleteFromCache(cachedFilename: CachedFilename): Unit = withContext(ioContext) {
-        Log.d("asdf", "deleting file: ${cachedFilename.absolute}")
-        File(cachedFilename.absolute).delete()
+    override fun deleteFromCache(cachedFilename: CachedFilename) {
+        appScope.launch(ioContext) {
+            Log.d("asdf", "deleting file: ${cachedFilename.absolute}")
+            File(cachedFilename.absolute).delete()
+        }
     }
 
-    override suspend fun save(cachedFilename: CachedFilename, destinationFilename: String, copyToMusicFolder: Boolean): Unit = withContext(ioContext) {
-        // todo: don't forget to slap on a file extension to destinationFilename. maybe use Uri.parse for this
+    override fun save(cachedFilename: CachedFilename, destinationFilename: String, copyToMusicFolder: Boolean) {
+        appScope.launch(ioContext) {
+            // todo: don't forget to slap on a file extension to destinationFilename. maybe use Uri.parse for this
+        }
     }
 
     private fun createMediaRecorder(): MediaRecorder {
