@@ -21,7 +21,7 @@ sealed class Event {
 
 sealed class Result {
     sealed class RequestPermissionResult : Result() {
-        object FromCreation : RequestPermissionResult()
+        object General : RequestPermissionResult()
         object FromStartRecording : RequestPermissionResult()
     }
     data class StartRecordingResult(val cachedFilename: CachedFilename) : Result()

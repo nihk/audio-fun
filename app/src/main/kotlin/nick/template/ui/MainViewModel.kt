@@ -55,7 +55,7 @@ class MainViewModel(
     private fun Flow<Event.RequestPermissionEvent>.toRequestPermissionResults(): Flow<Result> {
         return mapLatest { event ->
             when (event) {
-                Event.RequestPermissionEvent.General -> Result.RequestPermissionResult.FromCreation
+                Event.RequestPermissionEvent.General -> Result.RequestPermissionResult.General
                 Event.RequestPermissionEvent.FromStartRecording -> Result.RequestPermissionResult.FromStartRecording
             }
         }
