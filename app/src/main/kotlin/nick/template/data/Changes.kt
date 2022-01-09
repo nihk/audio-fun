@@ -1,6 +1,7 @@
 package nick.template.data
 
 sealed class Event {
+    object ListenToAudioEmissions : Event()
     sealed class RequestPermissionEvent : Event() {
         object General : RequestPermissionEvent()
         object FromStartRecording : RequestPermissionEvent()
@@ -12,6 +13,8 @@ sealed class Event {
     }
     sealed class RecordEvent : Event() {
         object Start : RecordEvent()
+        object Pause : RecordEvent()
+        object Resume : RecordEvent()
         object Stop : RecordEvent()
     }
     data class SaveRecordingEvent(val filename: String, val copyToMusicFolder: Boolean) : Event()

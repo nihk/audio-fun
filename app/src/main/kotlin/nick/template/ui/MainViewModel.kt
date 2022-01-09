@@ -9,7 +9,6 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.merge
@@ -21,6 +20,7 @@ import nick.template.data.Event
 import nick.template.data.Result
 import nick.template.data.State
 
+// todo: need to clean up audioRepository when VM is cleared. or backpress = stop recording event?
 class MainViewModel(
     private val handle: CachedFilenameHandle,
     private val audioRepository: AudioRepository,
@@ -29,6 +29,7 @@ class MainViewModel(
 
     override fun onStart() {
         processEvent(Event.RequestPermissionEvent.General)
+        processEvent(Event.ListenToAudioEmissions)
     }
 
     override fun Result.reduce(state: State): State {
@@ -43,6 +44,7 @@ class MainViewModel(
 
     override fun Flow<Event>.toResults(): Flow<Result> {
         return merge(
+            filterIsInstance<Event.ListenToAudioEmissions>().toAudioEmissionsResults(),
             filterIsInstance<Event.RequestPermissionEvent>().toRequestPermissionResults(),
             filterIsInstance<Event.PermissionResultEvent>().toPermissionResults(),
             filterIsInstance<Event.RecordEvent>().toRecordingResults(),
@@ -50,6 +52,26 @@ class MainViewModel(
             filterIsInstance<Event.CancelSaveRecordingEvent>().toCancelSaveRecordingResults(),
             filterIsInstance<Event.OpenAppSettingsEvent>().toOpenAppSettingsResults()
         )
+    }
+
+    private fun Flow<Event.ListenToAudioEmissions>.toAudioEmissionsResults(): Flow<Result> {
+        return flatMapLatest { audioRepository.emissions() }
+            .map { emission ->
+                when (emission) {
+                    is AudioRepository.Emission.StartedRecording -> {
+                        handle.filename = emission.cachedFilename
+                        Result.StartRecordingResult(
+                            emission.cachedFilename
+                        )
+                    }
+                    is AudioRepository.Emission.Amplitude -> {
+                        Log.d("asdf", "amplitude: ${emission.value}")
+                        Result.NoOpResult // todo: fold into state via a Result
+                    }
+                    is AudioRepository.Emission.Error -> Result.ErrorRecordingResult(emission.throwable)
+                    AudioRepository.Emission.FinishedRecording -> Result.StopRecordingResult(handle.require())
+                }
+            }
     }
 
     private fun Flow<Event.RequestPermissionEvent>.toRequestPermissionResults(): Flow<Result> {
@@ -84,35 +106,15 @@ class MainViewModel(
 
     private fun Flow<Event.RecordEvent>.toRecordingResults(): Flow<Result> {
         // todo: make sure recording twice without stopping is never permitted
-        return flatMapLatest { event ->
+        return mapLatest { event ->
             when (event) {
-                Event.RecordEvent.Start -> {
-                    audioRepository.record().map { emission ->
-                        when (emission) {
-                            is AudioRepository.Emission.Error -> Result.ErrorRecordingResult(emission.throwable)
-                            is AudioRepository.Emission.Recording -> {
-                                handle.filename = emission.cachedFilename
-                                Result.StartRecordingResult(
-                                    emission.cachedFilename
-                                )
-                            }
-                            is AudioRepository.Emission.Amplitude -> {
-                                Log.d("asdf", "amplitude: ${emission.value}")
-                                Result.NoOpResult
-                            }
-                        }
-                    }
-                }
-                Event.RecordEvent.Stop -> {
-                    val cachedFilename = handle.filename
-                    val result = if (cachedFilename != null) {
-                        Result.StopRecordingResult(cachedFilename)
-                    } else {
-                        Result.NoOpResult // An error happened previously, or recording didn't start yet; nothing to do here.
-                    }
-                    flowOf(result)
-                }
+                Event.RecordEvent.Start -> audioRepository.start()
+                Event.RecordEvent.Pause -> audioRepository.pause()
+                Event.RecordEvent.Resume -> audioRepository.resume()
+                Event.RecordEvent.Stop -> audioRepository.stop()
             }
+
+            Result.NoOpResult // Results are handled during repository emissions
         }
     }
 

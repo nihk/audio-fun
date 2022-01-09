@@ -82,6 +82,8 @@ class MainFragment @Inject constructor(
 
         val events = merge(
             binding.start.clicks().map { Event.RequestPermissionEvent.FromStartRecording },
+            binding.pause.clicks().map { Event.RecordEvent.Pause },
+            binding.resume.clicks().map { Event.RecordEvent.Resume },
             binding.stop.clicks().map { Event.RecordEvent.Stop },
             relay
         )
