@@ -1,4 +1,4 @@
-package nick.template.ui
+package nick.template.ui.dialogs
 
 import android.content.Context
 import android.os.Bundle

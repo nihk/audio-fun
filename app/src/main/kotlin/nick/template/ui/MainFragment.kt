@@ -20,6 +20,9 @@ import nick.template.R
 import nick.template.data.Effect
 import nick.template.data.Event
 import nick.template.databinding.MainFragmentBinding
+import nick.template.ui.dialogs.PermissionRationaleDialogFragment
+import nick.template.ui.dialogs.SaveRecordingDialogFragment
+import nick.template.ui.dialogs.TellUserToEnablePermissionViaSettingsDialogFragment
 import nick.template.ui.extensions.clicks
 
 // todo: probably should have a foreground service for recording
