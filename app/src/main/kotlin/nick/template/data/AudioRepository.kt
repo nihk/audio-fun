@@ -1,5 +1,6 @@
 package nick.template.data
 
+import android.Manifest
 import android.content.Context
 import android.media.MediaRecorder
 import android.os.Build
@@ -21,6 +22,7 @@ import kotlinx.coroutines.withContext
 import nick.template.di.IoContext
 
 interface AudioRepository {
+    fun permission(): String
     // todo: pass in some recording config
     fun record(): Flow<Emission>
     suspend fun deleteFromCache(cachedFilename: CachedFilename)
@@ -40,6 +42,8 @@ class AndroidAudioRepository @Inject constructor(
     @IoContext private val ioContext: CoroutineContext,
     private val timestamp: Timestamp
 ) : AudioRepository {
+    override fun permission(): String = Manifest.permission.RECORD_AUDIO
+
     override fun record() = callbackFlow {
         Log.d("asdf", "started recording")
         val extension = "3gp"

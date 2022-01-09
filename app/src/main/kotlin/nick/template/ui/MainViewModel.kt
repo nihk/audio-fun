@@ -7,7 +7,6 @@ import androidx.lifecycle.ViewModel
 import androidx.savedstate.SavedStateRegistryOwner
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -27,13 +26,14 @@ class MainViewModel(
 ) : MviViewModel<Event, Result, State, Effect>(State()) {
 
     override fun onStart() {
-        processEvent(Event.RequestPermissionEvent)
+        processEvent(Event.RequestPermissionEvent.FromCreation)
     }
 
     override fun Result.reduce(state: State): State {
         return when (this) {
             is Result.StartRecordingResult -> state.copy(cachedFilename = cachedFilename)
             is Result.CachedRecordingClearedResult -> state.copy(cachedFilename = null)
+            is Result.RequestPermissionResult.FromStartRecording -> state.copy(startRecordingAfterPermissionGranted = true)
             else -> state
         }
     }
@@ -41,6 +41,7 @@ class MainViewModel(
     override fun Flow<Event>.toResults(): Flow<Result> {
         return merge(
             filterIsInstance<Event.RequestPermissionEvent>().toRequestPermissionResults(),
+            filterIsInstance<Event.PermissionResultEvent>().toPermissionResults(),
             filterIsInstance<Event.RecordEvent>().toRecordingResults(),
             filterIsInstance<Event.SaveRecordingEvent>().toSaveRecordingResults(),
             filterIsInstance<Event.CancelSaveRecordingEvent>().toCancelSaveRecordingResults()
@@ -48,7 +49,30 @@ class MainViewModel(
     }
 
     private fun Flow<Event.RequestPermissionEvent>.toRequestPermissionResults(): Flow<Result> {
-        return emptyFlow()
+        return mapLatest { event ->
+            when (event) {
+                Event.RequestPermissionEvent.FromCreation -> Result.RequestPermissionResult.FromCreation
+                Event.RequestPermissionEvent.FromStartRecording -> Result.RequestPermissionResult.FromStartRecording
+            }
+        }
+    }
+
+    private fun Flow<Event.PermissionResultEvent>.toPermissionResults(): Flow<Result> {
+        return mapLatest { event ->
+            when (event) {
+                // todo: punt user to settings if they've requested too often; check if shouldShowRequestPermissionRationale
+                Event.PermissionResultEvent.Denied -> {
+                    Log.d("asdf", "permission denied")
+                    Result.NoOpResult
+                }
+                Event.PermissionResultEvent.Granted -> if (states.value.startRecordingAfterPermissionGranted) {
+                    Log.d("asdf", "permission granted; starting recording")
+                    Result.EffectResult(Effect.StartRecordingEffect)
+                } else {
+                    Result.NoOpResult // Granted permission from the initial screen creation prompt
+                }
+            }
+        }
     }
 
     private fun Flow<Event.RecordEvent>.toRecordingResults(): Flow<Result> {
@@ -109,9 +133,15 @@ class MainViewModel(
 
     override fun Flow<Result>.toEffects(): Flow<Effect> {
         return merge(
+            filterIsInstance<Result.RequestPermissionResult>().toRequestPermissionEffects(),
             filterIsInstance<Result.ErrorRecordingResult>().toErrorRecordingEffects(),
-            filterIsInstance<Result.StopRecordingResult>().toPromptSaveFileEffects()
+            filterIsInstance<Result.StopRecordingResult>().toPromptSaveFileEffects(),
+            filterIsInstance<Result.EffectResult>().toResultEffects()
         )
+    }
+
+    private fun Flow<Result.RequestPermissionResult>.toRequestPermissionEffects(): Flow<Effect> {
+        return mapLatest { Effect.RequestPermissionEffect(permission = audioRepository.permission()) }
     }
 
     private fun Flow<Result.ErrorRecordingResult>.toErrorRecordingEffects(): Flow<Effect> {
@@ -120,6 +150,10 @@ class MainViewModel(
 
     private fun Flow<Result.StopRecordingResult>.toPromptSaveFileEffects(): Flow<Effect> {
         return mapLatest { result -> Effect.PromptSaveFileEffect(result.cachedFilename) }
+    }
+
+    private fun Flow<Result.EffectResult>.toResultEffects(): Flow<Effect> {
+        return mapLatest { result -> result.effect }
     }
 
     class Factory @Inject constructor(

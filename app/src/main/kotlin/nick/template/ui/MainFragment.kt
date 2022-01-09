@@ -1,6 +1,5 @@
 package nick.template.ui
 
-import android.Manifest
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -21,7 +20,6 @@ import nick.template.databinding.MainFragmentBinding
 import nick.template.ui.extensions.clicks
 
 // todo: probably should have a foreground service for recording
-// todo: ask/check for permission when request to record is made
 // todo: don't save to cache, save to app disk space (non-cache) and add an option to copy to Music folder
 class MainFragment @Inject constructor(
     private val factory: MainViewModel.Factory
@@ -36,7 +34,6 @@ class MainFragment @Inject constructor(
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val binding = MainFragmentBinding.bind(view)
-        permissions.launch(Manifest.permission.RECORD_AUDIO)
 
         val states = viewModel.states
             .onEach { state ->
@@ -54,11 +51,12 @@ class MainFragment @Inject constructor(
                             .show(childFragmentManager, null)
                     }
                     is Effect.RequestPermissionEffect -> permissions.launch(effect.permission)
+                    Effect.StartRecordingEffect -> relay.emit(Event.RecordEvent.Start)
                 }
             }
 
         val events = merge(
-            binding.start.clicks().map { Event.RecordEvent.Start },
+            binding.start.clicks().map { Event.RequestPermissionEvent.FromStartRecording },
             binding.stop.clicks().map { Event.RecordEvent.Stop },
             relay
         )
