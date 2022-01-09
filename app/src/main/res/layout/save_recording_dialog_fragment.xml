@@ -10,7 +10,7 @@
         android:id="@+id/title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Save recording"
+        android:text="Name your recording"
         android:textSize="20sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
@@ -29,6 +29,14 @@
         app:layout_constraintTop_toBottomOf="@id/title"
         tools:text="recording_1234" />
 
+    <CheckBox
+        android:id="@+id/copy_to_music_folder"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Also copy to Music folder"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/input" />
+
     <Button
         android:id="@+id/delete"
         style="@style/Widget.MaterialComponents.Button.TextButton"
@@ -36,8 +44,9 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:text="delete"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/save"
-        app:layout_constraintTop_toBottomOf="@id/input" />
+        app:layout_constraintTop_toBottomOf="@id/copy_to_music_folder" />
 
     <Button
         android:id="@+id/save"
@@ -46,16 +55,8 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:text="save"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/input" />
-
-    <CheckBox
-        android:id="@+id/copy_to_music_folder"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/save"
         app:layout_constraintBottom_toBottomOf="parent"
-        android:text="Copy to Music folder" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/copy_to_music_folder" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

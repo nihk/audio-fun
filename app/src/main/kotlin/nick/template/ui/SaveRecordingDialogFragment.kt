@@ -3,6 +3,7 @@ package nick.template.ui
 import android.content.Context
 import android.os.Bundle
 import android.view.View
+import android.view.ViewGroup
 import androidx.core.os.bundleOf
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
@@ -16,7 +17,6 @@ import nick.template.ui.extensions.clicks
 import nick.template.ui.extensions.focusAndShowKeyboard
 import nick.template.ui.extensions.textChanges
 
-// fixme: UI isn't wide enough
 class SaveRecordingDialogFragment : DialogFragment(R.layout.save_recording_dialog_fragment) {
     private lateinit var listener: Listener
 
@@ -56,6 +56,10 @@ class SaveRecordingDialogFragment : DialogFragment(R.layout.save_recording_dialo
             }
 
         merge(states, results).launchIn(viewLifecycleOwner.lifecycleScope)
+
+        requireDialog().window?.let { window ->
+            window.attributes = window.attributes.also { it.width = ViewGroup.LayoutParams.MATCH_PARENT }
+        }
     }
 
     sealed class Result {
