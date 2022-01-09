@@ -8,10 +8,15 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
+import kotlin.math.pow
+import kotlin.math.roundToInt
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 import nick.template.di.IoContext
 
@@ -26,6 +31,7 @@ interface AudioRepository {
     sealed class Emission {
         data class Error(val throwable: Throwable) : Emission()
         data class Recording(val cachedFilename: String) : Emission()
+        data class Amplitude(val value: Int) : Emission()
     }
 }
 
@@ -56,13 +62,23 @@ class AndroidAudioRepository @Inject constructor(
             trySend(emission)
         }
 
+        while (currentCoroutineContext().isActive) {
+            trySend(AudioRepository.Emission.Amplitude(recorder.maxAmplitude.scaled()))
+            delay(500L)
+        }
+
         awaitClose {
             Log.d("asdf", "stopped recording")
             recorder.apply {
                 stop()
+                reset()
                 release()
             }
         }
+    }
+
+    private fun Int.scaled(): Int {
+        return (this / (2.0f.pow(16) - 1) * 100).roundToInt()
     }
 
     override suspend fun deleteFromCache(filename: String): Unit = withContext(ioContext) {

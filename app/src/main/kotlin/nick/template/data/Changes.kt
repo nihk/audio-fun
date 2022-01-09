@@ -1,7 +1,10 @@
 package nick.template.data
 
 sealed class Event {
-    data class RecordEvent(val start: Boolean) : Event()
+    sealed class RecordEvent : Event() {
+        object Start : RecordEvent()
+        object Stop : RecordEvent()
+    }
     data class SaveRecordingEvent(val filename: String) : Event()
     object CancelSaveRecordingEvent : Event()
 }

@@ -20,6 +20,8 @@ import nick.template.data.Event
 import nick.template.databinding.MainFragmentBinding
 import nick.template.ui.extensions.clicks
 
+// todo: probably should have a foreground service for recording
+// todo: ask for permission when recording as started
 class MainFragment @Inject constructor(
     private val factory: MainViewModel.Factory
 ) : Fragment(R.layout.main_fragment), SaveRecordingDialogFragment.Listener {
@@ -51,8 +53,8 @@ class MainFragment @Inject constructor(
             }
 
         val events = merge(
-            binding.start.clicks().map { Event.RecordEvent(start = true) },
-            binding.stop.clicks().map { Event.RecordEvent(start = false) },
+            binding.start.clicks().map { Event.RecordEvent.Start },
+            binding.stop.clicks().map { Event.RecordEvent.Stop },
             relay
         )
             .onEach(viewModel::processEvent)

@@ -1,5 +1,6 @@
 package nick.template.ui
 
+import android.util.Log
 import androidx.lifecycle.AbstractSavedStateViewModelFactory
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -43,26 +44,33 @@ class MainViewModel(
     private fun Flow<Event.RecordEvent>.toRecordingResults(): Flow<Result> {
         // todo: make sure recording twice without stopping is never permitted
         return flatMapLatest { event ->
-            if (event.start) {
-                audioRepository.record().map { emission ->
-                    when (emission) {
-                        is AudioRepository.Emission.Error -> Result.ErrorRecordingResult(emission.throwable)
-                        is AudioRepository.Emission.Recording -> {
-                            cachedFileHandle.filename = emission.cachedFilename
-                            Result.StartRecordingResult(
-                                emission.cachedFilename
-                            )
+            when (event) {
+                Event.RecordEvent.Start -> {
+                    audioRepository.record().map { emission ->
+                        when (emission) {
+                            is AudioRepository.Emission.Error -> Result.ErrorRecordingResult(emission.throwable)
+                            is AudioRepository.Emission.Recording -> {
+                                cachedFileHandle.filename = emission.cachedFilename
+                                Result.StartRecordingResult(
+                                    emission.cachedFilename
+                                )
+                            }
+                            is AudioRepository.Emission.Amplitude -> {
+                                Log.d("asdf", "amplitude: ${emission.value}")
+                                Result.NoOpResult
+                            }
                         }
                     }
                 }
-            } else {
-                val cachedFilename = cachedFileHandle.filename
-                val result = if (cachedFilename != null) {
-                    Result.StopRecordingResult
-                } else {
-                    Result.NoOpResult // An error happened previously, or recording didn't start yet; nothing to do here.
+                Event.RecordEvent.Stop -> {
+                    val cachedFilename = cachedFileHandle.filename
+                    val result = if (cachedFilename != null) {
+                        Result.StopRecordingResult
+                    } else {
+                        Result.NoOpResult // An error happened previously, or recording didn't start yet; nothing to do here.
+                    }
+                    flowOf(result)
                 }
-                flowOf(result)
             }
         }
     }
