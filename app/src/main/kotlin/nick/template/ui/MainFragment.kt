@@ -21,14 +21,16 @@ import nick.template.databinding.MainFragmentBinding
 import nick.template.ui.extensions.clicks
 
 // todo: probably should have a foreground service for recording
-// todo: ask for permission when recording as started
+// todo: ask/check for permission when request to record is made
+// todo: don't save to cache, save to app disk space (non-cache) and add an option to copy to Music folder
 class MainFragment @Inject constructor(
     private val factory: MainViewModel.Factory
 ) : Fragment(R.layout.main_fragment), SaveRecordingDialogFragment.Listener {
     private val viewModel: MainViewModel by viewModels { factory.create(this) }
     private val permissions =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { didPermit: Boolean ->
-            if (!didPermit) error("Needs record audio permission")
+            val event = if (didPermit) Event.PermissionResultEvent.Granted else Event.PermissionResultEvent.Denied
+            relay.tryEmit(event)
         }
     private val relay = MutableSharedFlow<Event>(extraBufferCapacity = 1)
 
@@ -38,7 +40,7 @@ class MainFragment @Inject constructor(
 
         val states = viewModel.states
             .onEach { state ->
-                binding.recordingFilename.text = state.cachedFilename.orEmpty()
+                binding.recordingFilename.text = state.cachedFilename?.absolute.orEmpty()
             }
 
         val effects = viewModel.effects
@@ -47,8 +49,11 @@ class MainFragment @Inject constructor(
                     is Effect.ErrorRecordingEffect -> Log.d("asdf", "error", effect.throwable)
                     is Effect.PromptSaveFileEffect -> {
                         Log.d("asdf", "prompting to save file")
-                        SaveRecordingDialogFragment().show(childFragmentManager, null)
+                        SaveRecordingDialogFragment
+                            .create(defaultFilename = effect.cachedFilename.simple)
+                            .show(childFragmentManager, null)
                     }
+                    is Effect.RequestPermissionEffect -> permissions.launch(effect.permission)
                 }
             }
 
@@ -64,8 +69,11 @@ class MainFragment @Inject constructor(
 
     override fun saveRecordingResult(result: SaveRecordingDialogFragment.Result) {
         val event = when (result) {
-            SaveRecordingDialogFragment.Result.Cancelled -> Event.CancelSaveRecordingEvent
-            is SaveRecordingDialogFragment.Result.SaveRecordingRequested -> Event.SaveRecordingEvent(result.filename)
+            SaveRecordingDialogFragment.Result.Delete -> Event.CancelSaveRecordingEvent
+            is SaveRecordingDialogFragment.Result.SaveRecordingRequested -> Event.SaveRecordingEvent(
+                filename = result.filename,
+                copyToMusicFolder = result.copyToMusicFolder
+            )
         }
         relay.tryEmit(event)
     }

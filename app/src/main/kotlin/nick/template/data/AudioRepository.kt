@@ -23,14 +23,14 @@ import nick.template.di.IoContext
 interface AudioRepository {
     // todo: pass in some recording config
     fun record(): Flow<Emission>
-    suspend fun deleteFromCache(filename: String)
-    suspend fun save(cachedFilename: String, destinationFilename: String)
+    suspend fun deleteFromCache(cachedFilename: CachedFilename)
+    suspend fun save(cachedFilename: CachedFilename, destinationFilename: String, copyToMusicFolder: Boolean)
 
     interface RecordingConfig
 
     sealed class Emission {
         data class Error(val throwable: Throwable) : Emission()
-        data class Recording(val cachedFilename: String) : Emission()
+        data class Recording(val cachedFilename: CachedFilename) : Emission()
         data class Amplitude(val value: Int) : Emission()
     }
 }
@@ -42,19 +42,25 @@ class AndroidAudioRepository @Inject constructor(
 ) : AudioRepository {
     override fun record() = callbackFlow {
         Log.d("asdf", "started recording")
+        val extension = "3gp"
         val filename = "recording_${timestamp.current()}"
-        val absoluteFilename = "${context.cacheDir.absolutePath}/$filename.3gp"
+        val absolute = "${context.cacheDir.absolutePath}/$filename.$extension"
 
         val recorder = createMediaRecorder().apply {
             // Order matters here. See source code docs.
             setAudioSource(MediaRecorder.AudioSource.MIC)
             setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-            setOutputFile(absoluteFilename)
+            setOutputFile(absolute)
             setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
             val emission = try {
                 prepare()
                 start()
-                AudioRepository.Emission.Recording(absoluteFilename)
+                val cachedFilename = CachedFilename(
+                    simple = filename,
+                    absolute = absolute,
+                    extension = extension
+                )
+                AudioRepository.Emission.Recording(cachedFilename)
             } catch (throwable: Throwable) {
                 if (throwable is CancellationException) throw throwable
                 AudioRepository.Emission.Error(throwable)
@@ -78,16 +84,15 @@ class AndroidAudioRepository @Inject constructor(
     }
 
     private fun Int.scaled(): Int {
-        return (this / (2.0f.pow(16) - 1) * 100).roundToInt()
+        return (this / AMPLITUDE_UPPER_BOUND.toFloat() * 100).roundToInt()
     }
 
-    override suspend fun deleteFromCache(filename: String): Unit = withContext(ioContext) {
-        Log.d("asdf", "deleting file: $filename")
-        File(filename).delete()
+    override suspend fun deleteFromCache(cachedFilename: CachedFilename): Unit = withContext(ioContext) {
+        Log.d("asdf", "deleting file: ${cachedFilename.absolute}")
+        File(cachedFilename.absolute).delete()
     }
 
-    override suspend fun save(cachedFilename: String, destinationFilename: String): Unit = withContext(ioContext) {
-        Log.d("asdf", "moving file from cache to mediastore")
+    override suspend fun save(cachedFilename: CachedFilename, destinationFilename: String, copyToMusicFolder: Boolean): Unit = withContext(ioContext) {
         // todo: don't forget to slap on a file extension to destinationFilename. maybe use Uri.parse for this
     }
 
@@ -98,5 +103,9 @@ class AndroidAudioRepository @Inject constructor(
             @Suppress("DEPRECATION")
             MediaRecorder()
         }
+    }
+
+    companion object {
+        private const val AMPLITUDE_UPPER_BOUND = 32767 // 2^(16-1) - 1
     }
 }

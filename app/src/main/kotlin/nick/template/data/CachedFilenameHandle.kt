@@ -2,14 +2,14 @@ package nick.template.data
 
 import androidx.lifecycle.SavedStateHandle
 
-class CachedFileHandle(private val delegate: SavedStateHandle) {
-    var filename: String?
+class CachedFilenameHandle(private val delegate: SavedStateHandle) {
+    var filename: CachedFilename?
         get() = delegate[KEY_CACHED_FILENAME]
         set(value) {
             delegate[KEY_CACHED_FILENAME] = value
         }
 
-    fun requireFilename() = requireNotNull(filename) {
+    fun require() = requireNotNull(filename) {
         "filename was requested but it was null"
     }
 
