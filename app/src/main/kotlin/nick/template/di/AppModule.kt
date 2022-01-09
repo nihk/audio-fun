@@ -8,7 +8,9 @@ import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoSet
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.Dispatchers
+import nick.template.data.AndroidAudioPermissionsRepository
 import nick.template.data.AndroidAudioRepository
+import nick.template.data.AudioPermissionsRepository
 import nick.template.data.AudioRepository
 import nick.template.data.SystemTimestamp
 import nick.template.data.Timestamp
@@ -34,6 +36,9 @@ interface AppModule {
 
     @Binds
     fun audioRepository(audioRepository: AndroidAudioRepository): AudioRepository
+
+    @Binds
+    fun audioPermissionsRepository(repository: AndroidAudioPermissionsRepository): AudioPermissionsRepository
 
     @Binds
     fun timestamp(timestamp: SystemTimestamp): Timestamp

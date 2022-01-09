@@ -2,11 +2,12 @@ package nick.template.data
 
 sealed class Event {
     sealed class RequestPermissionEvent : Event() {
-        object FromCreation : RequestPermissionEvent()
+        object General : RequestPermissionEvent()
         object FromStartRecording : RequestPermissionEvent()
     }
     sealed class PermissionResultEvent : Event() {
         object Granted : PermissionResultEvent()
+        object ShowRationale : PermissionResultEvent()
         object Denied : PermissionResultEvent()
     }
     sealed class RecordEvent : Event() {
@@ -15,6 +16,7 @@ sealed class Event {
     }
     data class SaveRecordingEvent(val filename: String, val copyToMusicFolder: Boolean) : Event()
     object CancelSaveRecordingEvent : Event()
+    object OpenAppSettingsEvent : Event()
 }
 
 sealed class Result {
@@ -35,9 +37,13 @@ sealed class Effect {
     data class PromptSaveFileEffect(val cachedFilename: CachedFilename) : Effect()
     data class RequestPermissionEffect(val permission: String) : Effect()
     object StartRecordingEffect : Effect()
+    object PermissionRationaleEffect : Effect()
+    object TellUserToEnablePermissionFromSettingsEffect : Effect()
+    data class OpenAppSettingsEffect(val parts: AppSettingsParts) : Effect()
 }
 
 data class State(
+    val isRecording: Boolean = false,
     val cachedFilename: CachedFilename? = null,
     val startRecordingAfterPermissionGranted: Boolean = false
 )

@@ -1,6 +1,9 @@
 package nick.template.ui
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
@@ -21,16 +24,26 @@ import nick.template.ui.extensions.clicks
 
 // todo: probably should have a foreground service for recording
 // todo: don't save to cache, save to app disk space (non-cache) and add an option to copy to Music folder
+// todo: pause/resume on API >= 24. this will mess with the way the repository coroutine flow works, tho
 class MainFragment @Inject constructor(
     private val factory: MainViewModel.Factory
-) : Fragment(R.layout.main_fragment), SaveRecordingDialogFragment.Listener {
+) : Fragment(R.layout.main_fragment),
+    SaveRecordingDialogFragment.Listener,
+    PermissionRationaleDialogFragment.Listener,
+    TellUserToEnablePermissionViaSettingsDialogFragment.Listener {
     private val viewModel: MainViewModel by viewModels { factory.create(this) }
+    private val relay = MutableSharedFlow<Event>(extraBufferCapacity = 1)
     private val permissions =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { didPermit: Boolean ->
-            val event = if (didPermit) Event.PermissionResultEvent.Granted else Event.PermissionResultEvent.Denied
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
+            val (permission, didPermit) = results.entries.single()
+
+            val event = when {
+                didPermit -> Event.PermissionResultEvent.Granted
+                shouldShowRequestPermissionRationale(permission) -> Event.PermissionResultEvent.ShowRationale
+                else -> Event.PermissionResultEvent.Denied
+            }
             relay.tryEmit(event)
         }
-    private val relay = MutableSharedFlow<Event>(extraBufferCapacity = 1)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val binding = MainFragmentBinding.bind(view)
@@ -50,8 +63,17 @@ class MainFragment @Inject constructor(
                             .create(defaultFilename = effect.cachedFilename.simple)
                             .show(childFragmentManager, null)
                     }
-                    is Effect.RequestPermissionEffect -> permissions.launch(effect.permission)
+                    is Effect.RequestPermissionEffect -> permissions.launch(arrayOf(effect.permission))
                     Effect.StartRecordingEffect -> relay.emit(Event.RecordEvent.Start)
+                    Effect.PermissionRationaleEffect -> PermissionRationaleDialogFragment().show(childFragmentManager, null)
+                    Effect.TellUserToEnablePermissionFromSettingsEffect -> TellUserToEnablePermissionViaSettingsDialogFragment().show(childFragmentManager, null)
+                    is Effect.OpenAppSettingsEffect -> {
+                        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                            val (scheme, packageName) = effect.parts
+                            data = Uri.fromParts(scheme, packageName, null)
+                        }
+                        startActivity(intent)
+                    }
                 }
             }
 
@@ -74,5 +96,13 @@ class MainFragment @Inject constructor(
             )
         }
         relay.tryEmit(event)
+    }
+
+    override fun onRationaleExplained() {
+        relay.tryEmit(Event.RequestPermissionEvent.General)
+    }
+
+    override fun openAppSettings() {
+        relay.tryEmit(Event.OpenAppSettingsEvent)
     }
 }

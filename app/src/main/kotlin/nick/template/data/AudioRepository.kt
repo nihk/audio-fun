@@ -1,6 +1,5 @@
 package nick.template.data
 
-import android.Manifest
 import android.content.Context
 import android.media.MediaRecorder
 import android.os.Build
@@ -9,7 +8,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
-import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.awaitClose
@@ -22,7 +20,6 @@ import kotlinx.coroutines.withContext
 import nick.template.di.IoContext
 
 interface AudioRepository {
-    fun permission(): String
     // todo: pass in some recording config
     fun record(): Flow<Emission>
     suspend fun deleteFromCache(cachedFilename: CachedFilename)
@@ -37,13 +34,12 @@ interface AudioRepository {
     }
 }
 
+// todo: inject external coroutine context (App-scoped) for file saving/deleting so it's not tied to VM scope
 class AndroidAudioRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     @IoContext private val ioContext: CoroutineContext,
     private val timestamp: Timestamp
 ) : AudioRepository {
-    override fun permission(): String = Manifest.permission.RECORD_AUDIO
-
     override fun record() = callbackFlow {
         Log.d("asdf", "started recording")
         val extension = "3gp"
