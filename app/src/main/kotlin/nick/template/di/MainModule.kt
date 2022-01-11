@@ -8,7 +8,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ActivityComponent
 import dagger.multibindings.IntoMap
 import nick.template.ui.AppFragmentFactory
-import nick.template.ui.MainFragment
+import nick.template.ui.RecorderFragment
 import nick.template.ui.dialogs.ConfirmStopRecordingDialogFragment
 import nick.template.ui.dialogs.DialogEventsMediator
 import nick.template.ui.dialogs.ExternalEvents
@@ -28,8 +28,8 @@ interface MainModule {
 
     @Binds
     @IntoMap
-    @FragmentKey(MainFragment::class)
-    fun mainFragment(fragment: MainFragment): Fragment
+    @FragmentKey(RecorderFragment::class)
+    fun recorderFragment(fragment: RecorderFragment): Fragment
 
     @Binds
     @IntoMap

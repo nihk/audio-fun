@@ -33,8 +33,7 @@ import nick.template.ui.extensions.clicks
 
 // todo: probably should have a foreground service for recording
 // todo: don't save to cache, save to app disk space (non-cache) and add an option to copy to Music folder
-// todo: rename to RecorderFragment; add a RecordingsFragment which is a list of all recordings; add PlayerFragment using MediaPlayer
-class MainFragment @Inject constructor(
+class RecorderFragment @Inject constructor(
     private val factory: MainViewModel.Factory,
     private val externalEvents: ExternalEvents
 ) : Fragment(R.layout.main_fragment) {
@@ -43,7 +42,6 @@ class MainFragment @Inject constructor(
     private val relay = MutableSharedFlow<Event>(extraBufferCapacity = 1)
     private val permissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
         val (permission, didPermit) = results.entries.single()
-
         val event = when {
             didPermit -> Event.PermissionResultEvent.Granted
             shouldShowRequestPermissionRationale(permission) -> Event.PermissionResultEvent.ShowRationale

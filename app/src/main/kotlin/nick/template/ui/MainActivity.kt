@@ -17,7 +17,7 @@ class MainActivity : AppCompatActivity() {
         if (supportFragmentManager.findFragmentById(binding.fragmentContainer.id) == null) {
             supportFragmentManager.commit {
                 setReorderingAllowed(true)
-                replace<MainFragment>(binding.fragmentContainer.id)
+                replace<RecorderFragment>(binding.fragmentContainer.id)
             }
         }
     }

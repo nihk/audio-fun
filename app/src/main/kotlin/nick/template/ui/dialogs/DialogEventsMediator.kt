@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import nick.template.data.Event
 
+// todo: get rid of this scope and make MainFragment have its own FragmentFactory for its childFragmentManager
 @ActivityScoped
 class DialogEventsMediator @Inject constructor() :
     ExternalEvents,
