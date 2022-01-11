@@ -9,8 +9,12 @@ class CachedFilenameHandle(private val delegate: SavedStateHandle) {
             delegate[KEY_CACHED_FILENAME] = value
         }
 
-    fun require() = requireNotNull(filename) {
-        "filename was requested but it was null"
+    fun require(): CachedFilename {
+        return requireNotNull(filename) { "filename was requested but it was null" }
+    }
+
+    fun consume(): CachedFilename {
+        return require().also { filename = null }
     }
 
     companion object {

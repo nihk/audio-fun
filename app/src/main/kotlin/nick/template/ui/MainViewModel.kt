@@ -29,44 +29,43 @@ class MainViewModel(
 
     override fun onStart() {
         processEvent(Event.RequestPermissionEvent.General)
-        processEvent(Event.ListenToAudioEmissions)
+        processEvent(Event.ListenToMediaRecording)
     }
 
     override fun Result.reduce(state: State): State {
         return when (this) {
             is Result.StartRecordingResult -> state.copy(isRecording = true, cachedFilename = cachedFilename, startRecordingAfterPermissionGranted = false)
-            is Result.StopRecordingResult -> state.copy(isRecording = false)
-            is Result.CachedRecordingClearedResult -> state.copy(cachedFilename = null)
+            is Result.StopRecordingResult -> state.copy(isRecording = false, amplitudes = emptyList())
+            is Result.CachedRecordingDeletedResult -> state.copy(cachedFilename = null)
             is Result.RequestPermissionResult.FromStartRecording -> state.copy(startRecordingAfterPermissionGranted = true)
+            is Result.AmplitudeResult -> state.copy(amplitudes = state.amplitudes + amplitude)
             else -> state
         }
     }
 
     override fun Flow<Event>.toResults(): Flow<Result> {
         return merge(
-            filterIsInstance<Event.ListenToAudioEmissions>().toAudioEmissionsResults(),
+            filterIsInstance<Event.ListenToMediaRecording>().toMediaRecordingResults(),
             filterIsInstance<Event.RequestPermissionEvent>().toRequestPermissionResults(),
             filterIsInstance<Event.PermissionResultEvent>().toPermissionResults(),
             filterIsInstance<Event.RecordEvent>().toRecordingResults(),
             filterIsInstance<Event.SaveRecordingEvent>().toSaveRecordingResults(),
-            filterIsInstance<Event.CancelSaveRecordingEvent>().toCancelSaveRecordingResults(),
+            filterIsInstance<Event.DeleteSaveRecordingEvent>().toDeleteSaveRecordingResults(),
             filterIsInstance<Event.OpenAppSettingsEvent>().toOpenAppSettingsResults()
         )
     }
 
-    private fun Flow<Event.ListenToAudioEmissions>.toAudioEmissionsResults(): Flow<Result> {
+    private fun Flow<Event.ListenToMediaRecording>.toMediaRecordingResults(): Flow<Result> {
         return flatMapLatest { audioRepository.emissions() }
             .map { emission ->
                 when (emission) {
                     is AudioRepository.Emission.StartedRecording -> {
                         handle.filename = emission.cachedFilename
-                        Result.StartRecordingResult(
-                            emission.cachedFilename
-                        )
+                        Result.StartRecordingResult(emission.cachedFilename)
                     }
                     is AudioRepository.Emission.Amplitude -> {
                         Log.d("asdf", "amplitude: ${emission.value}")
-                        Result.NoOpResult // todo: fold into state via a Result
+                        Result.AmplitudeResult(emission.value)
                     }
                     is AudioRepository.Emission.Error -> Result.ErrorRecordingResult(emission.throwable)
                     AudioRepository.Emission.FinishedRecording -> Result.StopRecordingResult(handle.require())
@@ -90,7 +89,7 @@ class MainViewModel(
                     Log.d("asdf", "permission granted; starting recording")
                     Result.EffectResult(Effect.StartRecordingEffect)
                 } else {
-                    Result.NoOpResult // Granted permission from the initial screen creation prompt
+                    Result.NoOpResult // Granted permission from the initial screen prompt
                 }
                 Event.PermissionResultEvent.ShowRationale -> {
                     Log.d("asdf", "explaining need for permission to user")
@@ -120,23 +119,21 @@ class MainViewModel(
 
     private fun Flow<Event.SaveRecordingEvent>.toSaveRecordingResults(): Flow<Result> {
         return mapLatest { event ->
-            val cachedFilename = handle.require()
+            val cachedFilename = handle.consume()
             audioRepository.save(
                 cachedFilename = cachedFilename,
                 destinationFilename = event.filename,
                 copyToMusicFolder = event.copyToMusicFolder
             )
             audioRepository.deleteFromCache(cachedFilename)
-            handle.filename = null
-            Result.CachedRecordingClearedResult
+            Result.CachedRecordingDeletedResult
         }
     }
 
-    private fun Flow<Event.CancelSaveRecordingEvent>.toCancelSaveRecordingResults(): Flow<Result> {
+    private fun Flow<Event.DeleteSaveRecordingEvent>.toDeleteSaveRecordingResults(): Flow<Result> {
         return mapLatest {
-            audioRepository.deleteFromCache(handle.require())
-            handle.filename = null
-            Result.CachedRecordingClearedResult
+            audioRepository.deleteFromCache(handle.consume())
+            Result.CachedRecordingDeletedResult
         }
     }
 

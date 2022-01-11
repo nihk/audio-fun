@@ -27,25 +27,26 @@ import nick.template.ui.extensions.clicks
 
 // todo: probably should have a foreground service for recording
 // todo: don't save to cache, save to app disk space (non-cache) and add an option to copy to Music folder
+// todo: need to make UI more responsive to state
 class MainFragment @Inject constructor(
     private val factory: MainViewModel.Factory
 ) : Fragment(R.layout.main_fragment),
     SaveRecordingDialogFragment.Listener,
     PermissionRationaleDialogFragment.Listener,
     TellUserToEnablePermissionViaSettingsDialogFragment.Listener {
+
     private val viewModel: MainViewModel by viewModels { factory.create(this) }
     private val relay = MutableSharedFlow<Event>(extraBufferCapacity = 1)
-    private val permissions =
-        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
-            val (permission, didPermit) = results.entries.single()
+    private val permissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
+        val (permission, didPermit) = results.entries.single()
 
-            val event = when {
-                didPermit -> Event.PermissionResultEvent.Granted
-                shouldShowRequestPermissionRationale(permission) -> Event.PermissionResultEvent.ShowRationale
-                else -> Event.PermissionResultEvent.Denied
-            }
-            relay.tryEmit(event)
+        val event = when {
+            didPermit -> Event.PermissionResultEvent.Granted
+            shouldShowRequestPermissionRationale(permission) -> Event.PermissionResultEvent.ShowRationale
+            else -> Event.PermissionResultEvent.Denied
         }
+        relay.tryEmit(event)
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val binding = MainFragmentBinding.bind(view)
@@ -71,8 +72,7 @@ class MainFragment @Inject constructor(
                     Effect.TellUserToEnablePermissionFromSettingsEffect -> TellUserToEnablePermissionViaSettingsDialogFragment().show(childFragmentManager, null)
                     is Effect.OpenAppSettingsEffect -> {
                         val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                            val (scheme, packageName) = effect.parts
-                            data = Uri.fromParts(scheme, packageName, null)
+                            data = Uri.fromParts(effect.parts.scheme, effect.parts.packageName, null)
                         }
                         startActivity(intent)
                     }
@@ -85,15 +85,14 @@ class MainFragment @Inject constructor(
             binding.resume.clicks().map { Event.RecordEvent.Resume },
             binding.stop.clicks().map { Event.RecordEvent.Stop },
             relay
-        )
-            .onEach(viewModel::processEvent)
+        ).onEach(viewModel::processEvent)
 
         merge(states, effects, events).launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
     override fun saveRecordingResult(result: SaveRecordingDialogFragment.Result) {
         val event = when (result) {
-            SaveRecordingDialogFragment.Result.Delete -> Event.CancelSaveRecordingEvent
+            SaveRecordingDialogFragment.Result.Delete -> Event.DeleteSaveRecordingEvent
             is SaveRecordingDialogFragment.Result.SaveRecordingRequested -> Event.SaveRecordingEvent(
                 filename = result.filename,
                 copyToMusicFolder = result.copyToMusicFolder

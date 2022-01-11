@@ -1,7 +1,7 @@
 package nick.template.data
 
 sealed class Event {
-    object ListenToAudioEmissions : Event()
+    object ListenToMediaRecording : Event()
     sealed class RequestPermissionEvent : Event() {
         object General : RequestPermissionEvent()
         object FromStartRecording : RequestPermissionEvent()
@@ -18,7 +18,7 @@ sealed class Event {
         object Stop : RecordEvent()
     }
     data class SaveRecordingEvent(val filename: String, val copyToMusicFolder: Boolean) : Event()
-    object CancelSaveRecordingEvent : Event()
+    object DeleteSaveRecordingEvent : Event()
     object OpenAppSettingsEvent : Event()
 }
 
@@ -31,8 +31,9 @@ sealed class Result {
     data class ErrorRecordingResult(val throwable: Throwable) : Result()
     data class StopRecordingResult(val cachedFilename: CachedFilename) : Result()
     object NoOpResult : Result()
-    object CachedRecordingClearedResult : Result()
+    object CachedRecordingDeletedResult : Result()
     data class EffectResult(val effect: Effect) : Result()
+    data class AmplitudeResult(val amplitude: Int) : Result()
 }
 
 sealed class Effect {
@@ -48,5 +49,6 @@ sealed class Effect {
 data class State(
     val isRecording: Boolean = false,
     val cachedFilename: CachedFilename? = null,
-    val startRecordingAfterPermissionGranted: Boolean = false
+    val startRecordingAfterPermissionGranted: Boolean = false,
+    val amplitudes: List<Int> = emptyList()
 )
