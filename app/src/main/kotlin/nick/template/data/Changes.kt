@@ -31,6 +31,7 @@ sealed class Result {
     data class StartRecordingResult(val cachedFilename: CachedFilename) : Result()
     data class ErrorRecordingResult(val throwable: Throwable) : Result()
     object PauseRecordingResult : Result()
+    object ResumeRecordingResult : Result()
     data class StopRecordingResult(val cachedFilename: CachedFilename) : Result()
     object NoOpResult : Result()
     object CachedRecordingDeletedResult : Result()

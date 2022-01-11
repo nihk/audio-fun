@@ -42,6 +42,7 @@ interface AudioRepository {
         data class StartedRecording(val cachedFilename: CachedFilename) : Emission()
         data class Amplitude(val value: Int) : Emission()
         object PausedRecording : Emission()
+        object ResumedRecording : Emission()
         object FinishedRecording : Emission()
     }
 }
@@ -68,6 +69,7 @@ class AndroidAudioRepository @Inject constructor(
             }
             is Event.Error -> flowOf(AudioRepository.Emission.Error(event.throwable))
             Event.Pause -> flowOf(AudioRepository.Emission.PausedRecording)
+            Event.Resume -> flowOf(AudioRepository.Emission.ResumedRecording)
             Event.FinishedRecording -> flowOf(AudioRepository.Emission.FinishedRecording)
         }
     }
@@ -115,6 +117,7 @@ class AndroidAudioRepository @Inject constructor(
     override suspend fun resume() {
         Log.d("asdf", "resumed recording")
         requireNotNull(mediaRecorder).resume()
+        events.emit(Event.Resume)
         events.emit(Event.PollAmplitude)
     }
 
@@ -160,6 +163,7 @@ class AndroidAudioRepository @Inject constructor(
         object PollAmplitude : Event()
         data class Error(val throwable: Throwable) : Event()
         object Pause : Event()
+        object Resume : Event()
         object FinishedRecording : Event()
     }
 

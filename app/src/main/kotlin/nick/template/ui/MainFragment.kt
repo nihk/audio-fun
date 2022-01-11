@@ -8,6 +8,7 @@ import android.util.Log
 import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -30,7 +31,6 @@ import nick.template.ui.extensions.clicks
 
 // todo: probably should have a foreground service for recording
 // todo: don't save to cache, save to app disk space (non-cache) and add an option to copy to Music folder
-// todo: need to make UI more responsive to state
 class MainFragment @Inject constructor(
     private val factory: MainViewModel.Factory
 ) : Fragment(R.layout.main_fragment),
@@ -51,7 +51,7 @@ class MainFragment @Inject constructor(
         }
         relay.tryEmit(event)
     }
-    private val backPress = object : OnBackPressedCallback(false) {
+    private val backPressWhileRecording = object : OnBackPressedCallback(false) {
         override fun handleOnBackPressed() {
             relay.tryEmit(Event.BackPressWhileRecordingEvent)
         }
@@ -60,15 +60,16 @@ class MainFragment @Inject constructor(
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val binding = MainFragmentBinding.bind(view)
 
-        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, backPress)
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, backPressWhileRecording)
 
         val states = viewModel.states
             .onEach { state ->
                 binding.recordingFilename.text = state.cachedFilename?.absolute.orEmpty()
-                backPress.isEnabled = when (state.recording) {
-                    State.Recording.Recording, State.Recording.Paused -> true
-                    State.Recording.Stopped -> false
-                }
+                binding.start.isVisible = state.recording == State.Recording.Stopped
+                binding.pause.isVisible = state.recording == State.Recording.Recording
+                binding.resume.isVisible = state.recording == State.Recording.Paused
+                binding.stop.isVisible = state.recording != State.Recording.Stopped
+                backPressWhileRecording.isEnabled = state.recording != State.Recording.Stopped
             }
 
         val effects = viewModel.effects

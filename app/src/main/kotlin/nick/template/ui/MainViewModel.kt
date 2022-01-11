@@ -34,10 +34,15 @@ class MainViewModel(
 
     override fun Result.reduce(state: State): State {
         return when (this) {
-            is Result.StartRecordingResult -> state.copy(recording = State.Recording.Recording, cachedFilename = cachedFilename, startRecordingAfterPermissionGranted = false)
+            is Result.StartRecordingResult -> state.copy(
+                recording = State.Recording.Recording,
+                cachedFilename = cachedFilename,
+                startRecordingAfterPermissionGranted = false
+            )
             Result.PauseRecordingResult -> state.copy(recording = State.Recording.Paused)
-            is Result.StopRecordingResult -> state.copy(recording = State.Recording.Stopped, amplitudes = emptyList())
-            is Result.CachedRecordingDeletedResult -> state.copy(cachedFilename = null)
+            Result.ResumeRecordingResult -> state.copy(recording = State.Recording.Recording)
+            is Result.StopRecordingResult -> state.copy(recording = State.Recording.Stopped)
+            is Result.CachedRecordingDeletedResult -> state.copy(cachedFilename = null, amplitudes = emptyList())
             is Result.RequestPermissionResult.FromStartRecording -> state.copy(startRecordingAfterPermissionGranted = true)
             is Result.AmplitudeResult -> state.copy(amplitudes = state.amplitudes + amplitude)
             else -> state
@@ -71,6 +76,7 @@ class MainViewModel(
                     }
                     is AudioRepository.Emission.Error -> Result.ErrorRecordingResult(emission.throwable)
                     AudioRepository.Emission.PausedRecording -> Result.PauseRecordingResult
+                    AudioRepository.Emission.ResumedRecording -> Result.ResumeRecordingResult
                     AudioRepository.Emission.FinishedRecording -> Result.StopRecordingResult(handle.require())
                 }
             }
@@ -107,7 +113,6 @@ class MainViewModel(
     }
 
     private fun Flow<Event.RecordEvent>.toRecordingResults(): Flow<Result> {
-        // todo: make sure recording twice without stopping is never permitted
         return mapLatest { event ->
             when (event) {
                 Event.RecordEvent.Start -> audioRepository.start()
