@@ -28,7 +28,6 @@ import nick.template.data.State
 import nick.template.databinding.MainFragmentBinding
 import nick.template.di.RecorderEntryPoint
 import nick.template.ui.dialogs.ConfirmStopRecordingDialogFragment
-import nick.template.ui.dialogs.ExternalEvents
 import nick.template.ui.dialogs.PermissionRationaleDialogFragment
 import nick.template.ui.dialogs.SaveRecordingDialogFragment
 import nick.template.ui.dialogs.TellUserToEnablePermissionViaSettingsDialogFragment
@@ -39,7 +38,6 @@ import nick.template.ui.extensions.entryPoint
 // todo: probably should have a foreground service for recording
 // todo: don't save to cache, save to app disk space (non-cache) and add an option to copy to Music folder
 // todo: move to own gradle module
-// todo: inject external events as a field and in MainInitializer set Fragment preAttach fragment factory?
 @AndroidEntryPoint
 class RecorderFragment @Inject constructor(
     private val factory: RecorderViewModel.Factory
@@ -60,12 +58,9 @@ class RecorderFragment @Inject constructor(
             relay.tryEmit(Event.BackPressWhileRecordingEvent)
         }
     }
-    private lateinit var externalEvents: ExternalEvents
 
     override fun onAttach(context: Context) {
-        val entryPoint = entryPoint<RecorderEntryPoint>()
-        childFragmentManager.fragmentFactory = entryPoint.fragmentFactory
-        externalEvents = entryPoint.externalEvents
+        childFragmentManager.fragmentFactory = entryPoint<RecorderEntryPoint>().fragmentFactory
         super.onAttach(context)
     }
 
@@ -120,7 +115,7 @@ class RecorderFragment @Inject constructor(
             binding.resume.clicks().map { Event.RecordEvent.Resume },
             binding.stop.clicks().map { Event.RecordEvent.Stop },
             relay,
-            externalEvents.events(),
+            entryPoint<RecorderEntryPoint>().externalEvents.events(),
         ).onEach(viewModel::processEvent)
 
         merge(states, effects, events).launchIn(viewLifecycleOwner.lifecycleScope)
