@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.core.os.bundleOf
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
+import javax.inject.Inject
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
@@ -17,16 +18,12 @@ import nick.template.ui.extensions.clicks
 import nick.template.ui.extensions.focusAndShowKeyboard
 import nick.template.ui.extensions.textChanges
 
-class SaveRecordingDialogFragment : DialogFragment(R.layout.save_recording_dialog_fragment) {
-    private lateinit var listener: Listener
-
-    interface Listener {
-        fun saveRecordingResult(result: Result)
-    }
+class SaveRecordingDialogFragment @Inject constructor(
+    private val saveRecording: SaveRecording
+) : DialogFragment(R.layout.save_recording_dialog_fragment) {
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        listener = parentFragment as Listener
         isCancelable = false // Prevent accidental taps outside the dialog deleting the file
     }
 
@@ -41,17 +38,17 @@ class SaveRecordingDialogFragment : DialogFragment(R.layout.save_recording_dialo
             .onEach { text -> binding.save.isEnabled = !text.isNullOrBlank() }
 
         val results = merge(
-            binding.delete.clicks().map { Result.Delete },
+            binding.delete.clicks().map { SaveRecording.Result.Delete },
             binding.save.clicks().map {
                 val filename = binding.input.text.toString()
-                Result.SaveRecordingRequested(
+                SaveRecording.Result.SaveRecordingRequested(
                     filename = filename,
                     copyToMusicFolder = binding.copyToMusicFolder.isChecked
                 )
             },
         )
             .onEach { result ->
-                listener.saveRecordingResult(result)
+                saveRecording.result(result)
                 dismiss()
             }
 
@@ -62,18 +59,11 @@ class SaveRecordingDialogFragment : DialogFragment(R.layout.save_recording_dialo
         }
     }
 
-    sealed class Result {
-        data class SaveRecordingRequested(val filename: String, val copyToMusicFolder: Boolean) : Result()
-        object Delete : Result()
-    }
-
     companion object {
         private const val KEY_DEFAULT_FILENAME = "default_filename"
 
-        fun create(defaultFilename: String): SaveRecordingDialogFragment {
-            return SaveRecordingDialogFragment().apply {
-                arguments = bundleOf(KEY_DEFAULT_FILENAME to defaultFilename)
-            }
+        fun bundle(defaultFilename: String): Bundle {
+            return bundleOf(KEY_DEFAULT_FILENAME to defaultFilename)
         }
     }
 }

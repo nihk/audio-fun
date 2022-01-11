@@ -1,22 +1,14 @@
 package nick.template.ui.dialogs
 
 import android.app.Dialog
-import android.content.Context
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.DialogFragment
+import javax.inject.Inject
 
-class TellUserToEnablePermissionViaSettingsDialogFragment : DialogFragment() {
-    private lateinit var listener: Listener
-
-    interface Listener {
-        fun openAppSettings()
-    }
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        listener = parentFragment as Listener
-    }
+class TellUserToEnablePermissionViaSettingsDialogFragment @Inject constructor(
+    private val openAppSettings: OpenAppSettings
+): DialogFragment() {
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return AlertDialog.Builder(requireContext())
@@ -24,7 +16,7 @@ class TellUserToEnablePermissionViaSettingsDialogFragment : DialogFragment() {
             .setMessage("You'll have to enable the record audio permission in app settings if you want to use the app.")
             .setPositiveButton("Open settings") { dialogInterface, _ ->
                 dialogInterface.dismiss()
-                listener.openAppSettings()
+                openAppSettings.openAppSettings()
             }
             .show()
     }

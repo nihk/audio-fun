@@ -10,6 +10,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.commit
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import javax.inject.Inject
@@ -24,6 +25,7 @@ import nick.template.data.Event
 import nick.template.data.State
 import nick.template.databinding.MainFragmentBinding
 import nick.template.ui.dialogs.ConfirmStopRecordingDialogFragment
+import nick.template.ui.dialogs.ExternalEvents
 import nick.template.ui.dialogs.PermissionRationaleDialogFragment
 import nick.template.ui.dialogs.SaveRecordingDialogFragment
 import nick.template.ui.dialogs.TellUserToEnablePermissionViaSettingsDialogFragment
@@ -31,13 +33,11 @@ import nick.template.ui.extensions.clicks
 
 // todo: probably should have a foreground service for recording
 // todo: don't save to cache, save to app disk space (non-cache) and add an option to copy to Music folder
+// todo: rename to RecorderFragment; add a RecordingsFragment which is a list of all recordings; add PlayerFragment using MediaPlayer
 class MainFragment @Inject constructor(
-    private val factory: MainViewModel.Factory
-) : Fragment(R.layout.main_fragment),
-    SaveRecordingDialogFragment.Listener,
-    PermissionRationaleDialogFragment.Listener,
-    TellUserToEnablePermissionViaSettingsDialogFragment.Listener,
-    ConfirmStopRecordingDialogFragment.Listener {
+    private val factory: MainViewModel.Factory,
+    private val externalEvents: ExternalEvents
+) : Fragment(R.layout.main_fragment) {
 
     private val viewModel: MainViewModel by viewModels { factory.create(this) }
     private val relay = MutableSharedFlow<Event>(extraBufferCapacity = 1)
@@ -78,21 +78,27 @@ class MainFragment @Inject constructor(
                     is Effect.ErrorRecordingEffect -> Log.d("asdf", "error", effect.throwable)
                     is Effect.PromptSaveFileEffect -> {
                         Log.d("asdf", "prompting to save file")
-                        SaveRecordingDialogFragment
-                            .create(defaultFilename = effect.cachedFilename.simple)
-                            .show(childFragmentManager, null)
+                        childFragmentManager.commit {
+                            add(SaveRecordingDialogFragment::class.java, SaveRecordingDialogFragment.bundle(effect.cachedFilename.simple), null)
+                        }
                     }
                     is Effect.RequestPermissionEffect -> permissions.launch(arrayOf(effect.permission))
                     Effect.StartRecordingEffect -> relay.emit(Event.RecordEvent.Start)
-                    Effect.PermissionRationaleEffect -> PermissionRationaleDialogFragment().show(childFragmentManager, null)
-                    Effect.TellUserToEnablePermissionFromSettingsEffect -> TellUserToEnablePermissionViaSettingsDialogFragment().show(childFragmentManager, null)
+                    Effect.PermissionRationaleEffect -> childFragmentManager.commit {
+                        add(PermissionRationaleDialogFragment::class.java, null, null)
+                    }
+                    Effect.TellUserToEnablePermissionFromSettingsEffect -> childFragmentManager.commit {
+                        add(TellUserToEnablePermissionViaSettingsDialogFragment::class.java, null, null)
+                    }
                     is Effect.OpenAppSettingsEffect -> {
                         val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                             data = Uri.fromParts(effect.parts.scheme, effect.parts.packageName, null)
                         }
                         startActivity(intent)
                     }
-                    Effect.ConfirmStopRecordingEffect -> ConfirmStopRecordingDialogFragment().show(childFragmentManager, null)
+                    Effect.ConfirmStopRecordingEffect -> childFragmentManager.commit {
+                        add(ConfirmStopRecordingDialogFragment::class.java, null, null)
+                    }
                 }
             }
 
@@ -101,33 +107,10 @@ class MainFragment @Inject constructor(
             binding.pause.clicks().map { Event.RecordEvent.Pause },
             binding.resume.clicks().map { Event.RecordEvent.Resume },
             binding.stop.clicks().map { Event.RecordEvent.Stop },
-            relay
+            relay,
+            externalEvents.events(),
         ).onEach(viewModel::processEvent)
 
         merge(states, effects, events).launchIn(viewLifecycleOwner.lifecycleScope)
-    }
-
-    override fun saveRecordingResult(result: SaveRecordingDialogFragment.Result) {
-        val event = when (result) {
-            SaveRecordingDialogFragment.Result.Delete -> Event.DeleteSaveRecordingEvent
-            is SaveRecordingDialogFragment.Result.SaveRecordingRequested -> Event.SaveRecordingEvent(
-                filename = result.filename,
-                copyToMusicFolder = result.copyToMusicFolder
-            )
-        }
-        relay.tryEmit(event)
-    }
-
-    override fun onRationaleExplained() {
-        relay.tryEmit(Event.RequestPermissionEvent.General)
-    }
-
-    override fun openAppSettings() {
-        relay.tryEmit(Event.OpenAppSettingsEvent)
-    }
-
-    override fun choice(stopRecording: Boolean) {
-        if (!stopRecording) return // Continue recording
-        relay.tryEmit(Event.RecordEvent.Stop)
     }
 }

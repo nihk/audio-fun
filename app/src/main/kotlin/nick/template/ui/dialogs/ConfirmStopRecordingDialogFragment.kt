@@ -1,22 +1,14 @@
 package nick.template.ui.dialogs
 
 import android.app.Dialog
-import android.content.Context
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.DialogFragment
+import javax.inject.Inject
 
-class ConfirmStopRecordingDialogFragment : DialogFragment() {
-    private lateinit var listener: Listener
-
-    interface Listener {
-        fun choice(stopRecording: Boolean)
-    }
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        listener = parentFragment as Listener
-    }
+class ConfirmStopRecordingDialogFragment @Inject constructor(
+    private val stopRecording: StopRecording
+) : DialogFragment() {
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return AlertDialog.Builder(requireContext())
@@ -24,11 +16,10 @@ class ConfirmStopRecordingDialogFragment : DialogFragment() {
             .setMessage("Recording is still in progress. Do you want to stop that?")
             .setPositiveButton("Yes") { dialogInterface, _ ->
                 dialogInterface.dismiss()
-                listener.choice(stopRecording = true)
+                stopRecording.stopRecording()
             }
             .setNegativeButton("No") { dialogInterface, _ ->
                 dialogInterface.dismiss()
-                listener.choice(stopRecording = false)
             }
             .show()
     }
