@@ -1,5 +1,6 @@
 package nick.template.ui
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -13,6 +14,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.launchIn
@@ -24,20 +26,21 @@ import nick.template.data.Effect
 import nick.template.data.Event
 import nick.template.data.State
 import nick.template.databinding.MainFragmentBinding
+import nick.template.di.RecorderEntryPoint
 import nick.template.ui.dialogs.ConfirmStopRecordingDialogFragment
 import nick.template.ui.dialogs.ExternalEvents
 import nick.template.ui.dialogs.PermissionRationaleDialogFragment
 import nick.template.ui.dialogs.SaveRecordingDialogFragment
 import nick.template.ui.dialogs.TellUserToEnablePermissionViaSettingsDialogFragment
 import nick.template.ui.extensions.clicks
+import nick.template.ui.extensions.entryPoint
 
 // todo: probably should have a foreground service for recording
 // todo: don't save to cache, save to app disk space (non-cache) and add an option to copy to Music folder
+@AndroidEntryPoint
 class RecorderFragment @Inject constructor(
-    private val factory: MainViewModel.Factory,
-    private val externalEvents: ExternalEvents
+    private val factory: MainViewModel.Factory
 ) : Fragment(R.layout.main_fragment) {
-
     private val viewModel: MainViewModel by viewModels { factory.create(this) }
     private val relay = MutableSharedFlow<Event>(extraBufferCapacity = 1)
     private val permissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
@@ -53,6 +56,14 @@ class RecorderFragment @Inject constructor(
         override fun handleOnBackPressed() {
             relay.tryEmit(Event.BackPressWhileRecordingEvent)
         }
+    }
+    private lateinit var externalEvents: ExternalEvents
+
+    override fun onAttach(context: Context) {
+        val entryPoint = entryPoint<RecorderEntryPoint>()
+        childFragmentManager.fragmentFactory = entryPoint.fragmentFactory
+        externalEvents = entryPoint.externalEvents
+        super.onAttach(context)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

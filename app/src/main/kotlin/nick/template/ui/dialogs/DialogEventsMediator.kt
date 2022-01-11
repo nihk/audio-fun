@@ -1,13 +1,12 @@
 package nick.template.ui.dialogs
 
-import dagger.hilt.android.scopes.ActivityScoped
+import dagger.hilt.android.scopes.FragmentScoped
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import nick.template.data.Event
 
-// todo: get rid of this scope and make MainFragment have its own FragmentFactory for its childFragmentManager
-@ActivityScoped
+@FragmentScoped
 class DialogEventsMediator @Inject constructor() :
     ExternalEvents,
     StopRecording,
