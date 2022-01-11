@@ -32,16 +32,19 @@ import nick.template.ui.dialogs.ExternalEvents
 import nick.template.ui.dialogs.PermissionRationaleDialogFragment
 import nick.template.ui.dialogs.SaveRecordingDialogFragment
 import nick.template.ui.dialogs.TellUserToEnablePermissionViaSettingsDialogFragment
+import nick.template.ui.extensions.add
 import nick.template.ui.extensions.clicks
 import nick.template.ui.extensions.entryPoint
 
 // todo: probably should have a foreground service for recording
 // todo: don't save to cache, save to app disk space (non-cache) and add an option to copy to Music folder
+// todo: move to own gradle module
+// todo: inject external events as a field and in MainInitializer set Fragment preAttach fragment factory?
 @AndroidEntryPoint
 class RecorderFragment @Inject constructor(
-    private val factory: MainViewModel.Factory
+    private val factory: RecorderViewModel.Factory
 ) : Fragment(R.layout.main_fragment) {
-    private val viewModel: MainViewModel by viewModels { factory.create(this) }
+    private val viewModel: RecorderViewModel by viewModels { factory.create(this) }
     private val relay = MutableSharedFlow<Event>(extraBufferCapacity = 1)
     private val permissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
         val (permission, didPermit) = results.entries.single()
@@ -88,16 +91,16 @@ class RecorderFragment @Inject constructor(
                     is Effect.PromptSaveFileEffect -> {
                         Log.d("asdf", "prompting to save file")
                         childFragmentManager.commit {
-                            add(SaveRecordingDialogFragment::class.java, SaveRecordingDialogFragment.bundle(effect.cachedFilename.simple), null)
+                            add<SaveRecordingDialogFragment>(args = SaveRecordingDialogFragment.bundle(effect.cachedFilename.simple))
                         }
                     }
                     is Effect.RequestPermissionEffect -> permissions.launch(arrayOf(effect.permission))
                     Effect.StartRecordingEffect -> relay.emit(Event.RecordEvent.Start)
                     Effect.PermissionRationaleEffect -> childFragmentManager.commit {
-                        add(PermissionRationaleDialogFragment::class.java, null, null)
+                        add<PermissionRationaleDialogFragment>()
                     }
                     Effect.TellUserToEnablePermissionFromSettingsEffect -> childFragmentManager.commit {
-                        add(TellUserToEnablePermissionViaSettingsDialogFragment::class.java, null, null)
+                        add<TellUserToEnablePermissionViaSettingsDialogFragment>()
                     }
                     is Effect.OpenAppSettingsEffect -> {
                         val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
@@ -106,7 +109,7 @@ class RecorderFragment @Inject constructor(
                         startActivity(intent)
                     }
                     Effect.ConfirmStopRecordingEffect -> childFragmentManager.commit {
-                        add(ConfirmStopRecordingDialogFragment::class.java, null, null)
+                        add<ConfirmStopRecordingDialogFragment>()
                     }
                 }
             }

@@ -21,7 +21,7 @@ import nick.template.data.Result
 import nick.template.data.State
 
 // todo: need to clean up audioRepository when VM is cleared?
-class MainViewModel(
+class RecorderViewModel(
     private val handle: CachedFilenameHandle,
     private val audioRepository: AudioRepository,
     private val permissionsRepository: AudioPermissionsRepository
@@ -193,7 +193,7 @@ class MainViewModel(
                     handle: SavedStateHandle
                 ): T {
                     @Suppress("UNCHECKED_CAST")
-                    return MainViewModel(
+                    return RecorderViewModel(
                         handle = CachedFilenameHandle(handle),
                         audioRepository = audioRepository,
                         permissionsRepository = permissionsRepository
