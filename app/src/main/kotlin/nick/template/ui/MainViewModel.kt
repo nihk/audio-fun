@@ -34,8 +34,9 @@ class MainViewModel(
 
     override fun Result.reduce(state: State): State {
         return when (this) {
-            is Result.StartRecordingResult -> state.copy(isRecording = true, cachedFilename = cachedFilename, startRecordingAfterPermissionGranted = false)
-            is Result.StopRecordingResult -> state.copy(isRecording = false, amplitudes = emptyList())
+            is Result.StartRecordingResult -> state.copy(recording = State.Recording.Recording, cachedFilename = cachedFilename, startRecordingAfterPermissionGranted = false)
+            Result.PauseRecordingResult -> state.copy(recording = State.Recording.Paused)
+            is Result.StopRecordingResult -> state.copy(recording = State.Recording.Stopped, amplitudes = emptyList())
             is Result.CachedRecordingDeletedResult -> state.copy(cachedFilename = null)
             is Result.RequestPermissionResult.FromStartRecording -> state.copy(startRecordingAfterPermissionGranted = true)
             is Result.AmplitudeResult -> state.copy(amplitudes = state.amplitudes + amplitude)
@@ -69,6 +70,7 @@ class MainViewModel(
                         Result.AmplitudeResult(emission.value)
                     }
                     is AudioRepository.Emission.Error -> Result.ErrorRecordingResult(emission.throwable)
+                    AudioRepository.Emission.PausedRecording -> Result.PauseRecordingResult
                     AudioRepository.Emission.FinishedRecording -> Result.StopRecordingResult(handle.require())
                 }
             }

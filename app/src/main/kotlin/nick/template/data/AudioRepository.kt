@@ -41,6 +41,7 @@ interface AudioRepository {
         data class Error(val throwable: Throwable) : Emission()
         data class StartedRecording(val cachedFilename: CachedFilename) : Emission()
         data class Amplitude(val value: Int) : Emission()
+        object PausedRecording : Emission()
         object FinishedRecording : Emission()
     }
 }
@@ -66,7 +67,7 @@ class AndroidAudioRepository @Inject constructor(
                 }
             }
             is Event.Error -> flowOf(AudioRepository.Emission.Error(event.throwable))
-            Event.Pause -> emptyFlow()
+            Event.Pause -> flowOf(AudioRepository.Emission.PausedRecording)
             Event.FinishedRecording -> flowOf(AudioRepository.Emission.FinishedRecording)
         }
     }

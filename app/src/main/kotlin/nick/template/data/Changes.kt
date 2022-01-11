@@ -30,6 +30,7 @@ sealed class Result {
     }
     data class StartRecordingResult(val cachedFilename: CachedFilename) : Result()
     data class ErrorRecordingResult(val throwable: Throwable) : Result()
+    object PauseRecordingResult : Result()
     data class StopRecordingResult(val cachedFilename: CachedFilename) : Result()
     object NoOpResult : Result()
     object CachedRecordingDeletedResult : Result()
@@ -49,8 +50,13 @@ sealed class Effect {
 }
 
 data class State(
-    val isRecording: Boolean = false,
+    val recording: Recording = Recording.Stopped,
+    val isPaused: Boolean = false,
     val cachedFilename: CachedFilename? = null,
     val startRecordingAfterPermissionGranted: Boolean = false,
     val amplitudes: List<Int> = emptyList()
-)
+) {
+    enum class Recording {
+        Recording, Paused, Stopped
+    }
+}

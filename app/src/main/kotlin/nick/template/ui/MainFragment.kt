@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.onEach
 import nick.template.R
 import nick.template.data.Effect
 import nick.template.data.Event
+import nick.template.data.State
 import nick.template.databinding.MainFragmentBinding
 import nick.template.ui.dialogs.ConfirmStopRecordingDialogFragment
 import nick.template.ui.dialogs.PermissionRationaleDialogFragment
@@ -64,7 +65,10 @@ class MainFragment @Inject constructor(
         val states = viewModel.states
             .onEach { state ->
                 binding.recordingFilename.text = state.cachedFilename?.absolute.orEmpty()
-                backPress.isEnabled = state.isRecording
+                backPress.isEnabled = when (state.recording) {
+                    State.Recording.Recording, State.Recording.Paused -> true
+                    State.Recording.Stopped -> false
+                }
             }
 
         val effects = viewModel.effects
