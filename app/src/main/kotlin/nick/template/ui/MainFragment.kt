@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.view.View
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -20,6 +21,7 @@ import nick.template.R
 import nick.template.data.Effect
 import nick.template.data.Event
 import nick.template.databinding.MainFragmentBinding
+import nick.template.ui.dialogs.ConfirmStopRecordingDialogFragment
 import nick.template.ui.dialogs.PermissionRationaleDialogFragment
 import nick.template.ui.dialogs.SaveRecordingDialogFragment
 import nick.template.ui.dialogs.TellUserToEnablePermissionViaSettingsDialogFragment
@@ -33,7 +35,8 @@ class MainFragment @Inject constructor(
 ) : Fragment(R.layout.main_fragment),
     SaveRecordingDialogFragment.Listener,
     PermissionRationaleDialogFragment.Listener,
-    TellUserToEnablePermissionViaSettingsDialogFragment.Listener {
+    TellUserToEnablePermissionViaSettingsDialogFragment.Listener,
+    ConfirmStopRecordingDialogFragment.Listener {
 
     private val viewModel: MainViewModel by viewModels { factory.create(this) }
     private val relay = MutableSharedFlow<Event>(extraBufferCapacity = 1)
@@ -47,13 +50,21 @@ class MainFragment @Inject constructor(
         }
         relay.tryEmit(event)
     }
+    private val backPress = object : OnBackPressedCallback(false) {
+        override fun handleOnBackPressed() {
+            relay.tryEmit(Event.BackPressWhileRecordingEvent)
+        }
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val binding = MainFragmentBinding.bind(view)
 
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, backPress)
+
         val states = viewModel.states
             .onEach { state ->
                 binding.recordingFilename.text = state.cachedFilename?.absolute.orEmpty()
+                backPress.isEnabled = state.isRecording
             }
 
         val effects = viewModel.effects
@@ -76,6 +87,7 @@ class MainFragment @Inject constructor(
                         }
                         startActivity(intent)
                     }
+                    Effect.ConfirmStopRecordingEffect -> ConfirmStopRecordingDialogFragment().show(childFragmentManager, null)
                 }
             }
 
@@ -107,5 +119,10 @@ class MainFragment @Inject constructor(
 
     override fun openAppSettings() {
         relay.tryEmit(Event.OpenAppSettingsEvent)
+    }
+
+    override fun choice(stopRecording: Boolean) {
+        if (!stopRecording) return // Continue recording
+        relay.tryEmit(Event.RecordEvent.Stop)
     }
 }

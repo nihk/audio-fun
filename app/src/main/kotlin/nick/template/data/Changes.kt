@@ -20,6 +20,7 @@ sealed class Event {
     data class SaveRecordingEvent(val filename: String, val copyToMusicFolder: Boolean) : Event()
     object DeleteSaveRecordingEvent : Event()
     object OpenAppSettingsEvent : Event()
+    object BackPressWhileRecordingEvent : Event()
 }
 
 sealed class Result {
@@ -44,6 +45,7 @@ sealed class Effect {
     object PermissionRationaleEffect : Effect()
     object TellUserToEnablePermissionFromSettingsEffect : Effect()
     data class OpenAppSettingsEffect(val parts: AppSettingsParts) : Effect()
+    object ConfirmStopRecordingEffect : Effect()
 }
 
 data class State(

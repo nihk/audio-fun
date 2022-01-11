@@ -20,7 +20,7 @@ import nick.template.data.Event
 import nick.template.data.Result
 import nick.template.data.State
 
-// todo: need to clean up audioRepository when VM is cleared. or backpress = stop recording event?
+// todo: need to clean up audioRepository when VM is cleared?
 class MainViewModel(
     private val handle: CachedFilenameHandle,
     private val audioRepository: AudioRepository,
@@ -51,7 +51,8 @@ class MainViewModel(
             filterIsInstance<Event.RecordEvent>().toRecordingResults(),
             filterIsInstance<Event.SaveRecordingEvent>().toSaveRecordingResults(),
             filterIsInstance<Event.DeleteSaveRecordingEvent>().toDeleteSaveRecordingResults(),
-            filterIsInstance<Event.OpenAppSettingsEvent>().toOpenAppSettingsResults()
+            filterIsInstance<Event.OpenAppSettingsEvent>().toOpenAppSettingsResults(),
+            filterIsInstance<Event.BackPressWhileRecordingEvent>().toBackPressWhileRecordingResults()
         )
     }
 
@@ -142,6 +143,10 @@ class MainViewModel(
             val effect = Effect.OpenAppSettingsEffect(parts = permissionsRepository.appSettingsParts())
             Result.EffectResult(effect)
         }
+    }
+
+    private fun Flow<Event.BackPressWhileRecordingEvent>.toBackPressWhileRecordingResults(): Flow<Result> {
+        return mapLatest { Result.EffectResult(Effect.ConfirmStopRecordingEffect) }
     }
 
     override fun Flow<Result>.toEffects(): Flow<Effect> {
