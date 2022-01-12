@@ -54,6 +54,7 @@ class SaveRecordingDialogFragment @Inject constructor(
 
         merge(states, results).launchIn(viewLifecycleOwner.lifecycleScope)
 
+        // Hack to make dialog fill the window width
         requireDialog().window?.let { window ->
             window.attributes = window.attributes.also { it.width = ViewGroup.LayoutParams.MATCH_PARENT }
         }

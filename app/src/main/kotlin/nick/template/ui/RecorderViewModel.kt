@@ -98,7 +98,7 @@ class RecorderViewModel(
                     Log.d("asdf", "permission granted; starting recording")
                     Result.EffectResult(Effect.StartRecordingEffect)
                 } else {
-                    Result.NoOpResult // Granted permission from the initial screen prompt
+                    Result.NoOpResult // Granted permission from some other source, e.g. the initial screen prompt
                 }
                 Event.PermissionResultEvent.ShowRationale -> {
                     Log.d("asdf", "explaining need for permission to user")
