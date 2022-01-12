@@ -36,7 +36,6 @@ import nick.template.ui.extensions.clicks
 import nick.template.ui.extensions.entryPoint
 
 // todo: probably should have a foreground service for recording
-// todo: don't save to cache, save to app disk space (non-cache) and add an option to copy to Music folder
 // todo: move to own gradle module
 @AndroidEntryPoint
 class RecorderFragment @Inject constructor(

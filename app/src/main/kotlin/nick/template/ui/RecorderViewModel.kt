@@ -131,9 +131,9 @@ class RecorderViewModel(
             audioRepository.save(
                 cachedFilename = cachedFilename,
                 destinationFilename = event.filename,
-                copyToMusicFolder = event.copyToMusicFolder
+                copyToMusicFolder = event.copyToMusicFolder,
+                cleanupCache = true
             )
-            audioRepository.deleteFromCache(cachedFilename)
             Result.CachedRecordingDeletedResult
         }
     }

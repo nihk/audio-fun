@@ -1,9 +1,14 @@
 package nick.template.data
 
+import android.content.ContentResolver
+import android.content.ContentValues
 import android.content.Context
 import android.media.MediaRecorder
+import android.net.Uri
 import android.os.Build
+import android.provider.MediaStore
 import android.util.Log
+import androidx.core.content.contentValuesOf
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import javax.inject.Inject
@@ -15,7 +20,6 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -27,15 +31,18 @@ import nick.template.di.IoContext
 
 interface AudioRepository {
     fun emissions(): Flow<Emission>
-    // todo: pass in some recording config
+    // todo: pass in some recording config?
     suspend fun start()
     suspend fun pause()
     suspend fun resume()
     suspend fun stop()
     fun deleteFromCache(cachedFilename: CachedFilename)
-    fun save(cachedFilename: CachedFilename, destinationFilename: String, copyToMusicFolder: Boolean)
-
-    interface RecordingConfig
+    fun save(
+        cachedFilename: CachedFilename,
+        destinationFilename: String,
+        copyToMusicFolder: Boolean,
+        cleanupCache: Boolean
+    )
 
     sealed class Emission {
         data class Error(val throwable: Throwable) : Emission()
@@ -77,16 +84,17 @@ class AndroidAudioRepository @Inject constructor(
     override suspend fun start() {
         check(mediaRecorder == null)
         Log.d("asdf", "started recording")
-        val extension = "3gp"
+        val extension = "aac"
         val filename = "recording_${timestamp.current()}"
         val absolute = "${context.cacheDir.absolutePath}/$filename.$extension"
 
         val mediaRecorder = createMediaRecorder().apply {
             // Order matters here. See source code docs.
             setAudioSource(MediaRecorder.AudioSource.MIC)
-            setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+            setAudioSamplingRate(44100)
+            setOutputFormat(MediaRecorder.OutputFormat.AAC_ADTS)
             setOutputFile(absolute)
-            setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
+            setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
         }.also { this.mediaRecorder = it }
 
         try {
@@ -137,15 +145,65 @@ class AndroidAudioRepository @Inject constructor(
     }
 
     override fun deleteFromCache(cachedFilename: CachedFilename) {
-        appScope.launch(ioContext) {
-            Log.d("asdf", "deleting file: ${cachedFilename.absolute}")
-            File(cachedFilename.absolute).delete()
+        appScope.launch {
+            deleteFromCacheInternal(cachedFilename)
         }
     }
 
-    override fun save(cachedFilename: CachedFilename, destinationFilename: String, copyToMusicFolder: Boolean) {
+    private suspend fun deleteFromCacheInternal(cachedFilename: CachedFilename) = withContext(ioContext) {
+        Log.d("asdf", "deleting file: ${cachedFilename.absolute}")
+        File(cachedFilename.absolute).delete()
+    }
+
+    override fun save(
+        cachedFilename: CachedFilename,
+        destinationFilename: String,
+        copyToMusicFolder: Boolean,
+        cleanupCache: Boolean
+    ) {
         appScope.launch(ioContext) {
-            // todo: don't forget to slap on a file extension to destinationFilename. maybe use Uri.parse for this
+            val destination = File(context.filesDir, "$destinationFilename.${cachedFilename.extension}")
+            val source = File(cachedFilename.absolute)
+            source.copyTo(destination)
+
+            if (copyToMusicFolder) {
+                writeToMediaStore(cachedFilename, source)
+            }
+
+            deleteFromCacheInternal(cachedFilename)
+        }
+    }
+
+    private fun writeToMediaStore(cachedFilename: CachedFilename, source: File) {
+        val musicFolder: Uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+        } else {
+            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+        }
+
+        val details = ContentValues().apply {
+            put(MediaStore.Audio.Media.DISPLAY_NAME, cachedFilename.simple)
+            put(MediaStore.Audio.Media.MIME_TYPE, "audio/${cachedFilename.extension}")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                put(MediaStore.Audio.Media.IS_PENDING, 1)
+            }
+        }
+
+        val resolver: ContentResolver = context.contentResolver
+        val recording: Uri = requireNotNull(resolver.insert(musicFolder, details))
+        source.inputStream().use { inputStream ->
+            resolver.openOutputStream(recording).use { outputStream ->
+                inputStream.copyTo(requireNotNull(outputStream))
+            }
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            resolver.update(
+                recording,
+                contentValuesOf(MediaStore.Audio.Media.IS_PENDING to 0),
+                null,
+                null
+            )
         }
     }
 
