@@ -8,6 +8,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import nick.template.databinding.MainActivityBinding
 import nick.template.di.MainEntryPoint
 import nick.template.ui.extensions.entryPoint
+import nick.template.ui.recordings.RecordingsFragment
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -20,7 +21,7 @@ class MainActivity : AppCompatActivity() {
         if (supportFragmentManager.findFragmentById(binding.fragmentContainer.id) == null) {
             supportFragmentManager.commit {
                 setReorderingAllowed(true)
-                replace<RecorderFragment>(binding.fragmentContainer.id)
+                replace<RecordingsFragment>(binding.fragmentContainer.id)
             }
         }
     }

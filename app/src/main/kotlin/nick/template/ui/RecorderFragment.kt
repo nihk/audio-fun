@@ -25,7 +25,7 @@ import nick.template.R
 import nick.template.data.Effect
 import nick.template.data.Event
 import nick.template.data.State
-import nick.template.databinding.MainFragmentBinding
+import nick.template.databinding.RecorderFragmentBinding
 import nick.template.di.RecorderEntryPoint
 import nick.template.ui.dialogs.ConfirmStopRecordingDialogFragment
 import nick.template.ui.dialogs.PermissionRationaleDialogFragment
@@ -40,7 +40,7 @@ import nick.template.ui.extensions.entryPoint
 @AndroidEntryPoint
 class RecorderFragment @Inject constructor(
     private val factory: RecorderViewModel.Factory
-) : Fragment(R.layout.main_fragment) {
+) : Fragment(R.layout.recorder_fragment) {
     private val viewModel: RecorderViewModel by viewModels { factory.create(this) }
     private val relay = MutableSharedFlow<Event>(extraBufferCapacity = 1)
     private val permissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
@@ -64,7 +64,7 @@ class RecorderFragment @Inject constructor(
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        val binding = MainFragmentBinding.bind(view)
+        val binding = RecorderFragmentBinding.bind(view)
 
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, backPressWhileRecording)
 
