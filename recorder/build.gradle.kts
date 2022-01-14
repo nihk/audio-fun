@@ -1,25 +1,15 @@
 plugins {
-    `android-application`
+    `android-library`
     kotlin("android")
     kotlin("kapt")
-    hilt
+    `kotlin-parcelize`
+    `hilt`
 }
 
-androidAppConfig {
-    defaultConfig {
-        applicationId = "nick.audio_fun"
-        versionCode = 1
-        versionName = "1.0"
-    }
-}
-
-withKtlint()
+androidLibraryConfig()
 
 dependencies {
     implementation(project(Modules.core))
-    implementation(project(Modules.recordings))
-    implementation(project(Modules.recorder))
-    implementation(project(Modules.playback))
 
     implementation(Dependencies.multidex)
     implementation(Dependencies.coreKtx)
@@ -33,7 +23,6 @@ dependencies {
     implementation(Dependencies.Dagger.Hilt.runtime)
     implementation(Dependencies.Lifecycle.runtime)
 
-    debugImplementation(Dependencies.leakCanary)
     debugImplementation(Dependencies.Fragment.testing)
 
     testImplementation(Dependencies.junit)
