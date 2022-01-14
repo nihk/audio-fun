@@ -39,10 +39,8 @@ import kotlinx.coroutines.flow.onEach
 // todo: probably should have a foreground service for recording
 // todo: move to own gradle module
 @AndroidEntryPoint
-class RecorderFragment @Inject constructor(
-    private val factory: RecorderViewModel.Factory
-) : Fragment(R.layout.recorder_fragment) {
-    private val viewModel: RecorderViewModel by viewModels { factory.create(this) }
+class RecorderFragment @Inject constructor() : Fragment(R.layout.recorder_fragment) {
+    private val viewModel: RecorderViewModel by viewModels()
     private val relay = MutableSharedFlow<Event>(extraBufferCapacity = 1)
     private val permissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
         val (permission, didPermit) = results.entries.single()

@@ -8,9 +8,9 @@ import androidx.core.os.bundleOf
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
 import com.audio.core.extensions.clicks
-import com.audio.core.extensions.focusAndShowKeyboard
 import com.audio.recorder.R
 import com.audio.recorder.databinding.SaveRecordingDialogFragmentBinding
+import com.audio.recorder.extensions.focusAndShowKeyboard
 import com.audio.recorder.extensions.textChanges
 import javax.inject.Inject
 import kotlinx.coroutines.flow.launchIn

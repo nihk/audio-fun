@@ -2,6 +2,7 @@ plugins {
     `android-library`
     kotlin("android")
     kotlin("kapt")
+    hilt
 }
 
 androidLibraryConfig()
@@ -17,4 +18,7 @@ dependencies {
 
     testImplementation(Dependencies.junit)
     defaultAndroidTestDependencies()
+
+    kapt(Dependencies.Dagger.compiler)
+    kapt(Dependencies.Dagger.Hilt.compiler)
 }

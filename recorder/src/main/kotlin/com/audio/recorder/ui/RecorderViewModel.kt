@@ -1,10 +1,7 @@
 package com.audio.recorder.ui
 
 import android.util.Log
-import androidx.lifecycle.AbstractSavedStateViewModelFactory
 import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.savedstate.SavedStateRegistryOwner
 import com.audio.core.mvi.MviViewModel
 import com.audio.recorder.data.AudioPermissionsRepository
 import com.audio.recorder.data.AudioRepository
@@ -13,6 +10,7 @@ import com.audio.recorder.data.Effect
 import com.audio.recorder.data.Event
 import com.audio.recorder.data.Result
 import com.audio.recorder.data.State
+import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterIsInstance
@@ -22,11 +20,13 @@ import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.merge
 
 // todo: need to clean up audioRepository when VM is cleared?
-class RecorderViewModel(
-    private val handle: CachedFilenameHandle,
+@HiltViewModel
+class RecorderViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private val audioRepository: AudioRepository,
     private val permissionsRepository: AudioPermissionsRepository
 ) : MviViewModel<Event, Result, State, Effect>(State()) {
+    private val handle = CachedFilenameHandle(savedStateHandle)
 
     override fun onStart() {
         processEvent(Event.RequestPermissionEvent.General)
@@ -180,27 +180,5 @@ class RecorderViewModel(
 
     private fun Flow<Result.EffectResult>.toResultEffects(): Flow<Effect> {
         return mapLatest { result -> result.effect }
-    }
-
-    class Factory @Inject constructor(
-        private val audioRepository: AudioRepository,
-        private val permissionsRepository: AudioPermissionsRepository
-    ) {
-        fun create(owner: SavedStateRegistryOwner): AbstractSavedStateViewModelFactory {
-            return object : AbstractSavedStateViewModelFactory(owner, null) {
-                override fun <T : ViewModel> create(
-                    key: String,
-                    modelClass: Class<T>,
-                    handle: SavedStateHandle
-                ): T {
-                    @Suppress("UNCHECKED_CAST")
-                    return RecorderViewModel(
-                        handle = CachedFilenameHandle(handle),
-                        audioRepository = audioRepository,
-                        permissionsRepository = permissionsRepository
-                    ) as T
-                }
-            }
-        }
     }
 }
