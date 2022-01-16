@@ -15,12 +15,15 @@ class FilesystemRecordingsRepository @Inject constructor(
 ) : RecordingsRepository {
     override fun recordings(): Flow<List<Recording>> {
         return filesystem.files().map { files ->
-            files.map { file ->
-                Recording(
-                    name = file.name,
-                    absolute = file.absolutePath
-                )
-            }
+            files
+                .map { file ->
+                    Recording(
+                        name = file.name,
+                        absolute = file.absolutePath,
+                        lastModified = file.lastModified()
+                    )
+                }
+                .sortedByDescending(Recording::lastModified)
         }
     }
 
