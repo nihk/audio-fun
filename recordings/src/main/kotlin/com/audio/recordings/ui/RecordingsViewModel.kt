@@ -1,29 +1,45 @@
 package com.audio.recordings.ui
 
-import androidx.lifecycle.AbstractSavedStateViewModelFactory
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.savedstate.SavedStateRegistryOwner
 import com.audio.core.mvi.MviViewModel
 import com.audio.recordings.data.Effect
 import com.audio.recordings.data.Event
+import com.audio.recordings.data.RecordingsRepository
 import com.audio.recordings.data.Result
 import com.audio.recordings.data.State
+import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.merge
 
-class RecordingsViewModel : MviViewModel<Event, Result, State, Effect>(State()) {
+@HiltViewModel
+class RecordingsViewModel @Inject constructor(
+    private val repository: RecordingsRepository
+) : MviViewModel<Event, Result, State, Effect>(State()) {
+    override fun onStart() {
+        processEvent(Event.ShowRecordingsEvent)
+    }
+
     override fun Result.reduce(state: State): State {
-        return state
+        return when (this) {
+            is Result.ShowRecordingsResult -> state.copy(recordings = recordings)
+            else -> state
+        }
     }
 
     override fun Flow<Event>.toResults(): Flow<Result> {
         return merge(
+            filterIsInstance<Event.ShowRecordingsEvent>().toShowRecordingsResults(),
             filterIsInstance<Event.RecordEvent>().toRecordResults()
         )
+    }
+
+    private fun Flow<Event.ShowRecordingsEvent>.toShowRecordingsResults(): Flow<Result> {
+        return flatMapLatest { repository.recordings() }
+            .map(Result::ShowRecordingsResult)
     }
 
     private fun Flow<Event.RecordEvent>.toRecordResults(): Flow<Result> {
@@ -38,20 +54,5 @@ class RecordingsViewModel : MviViewModel<Event, Result, State, Effect>(State()) 
 
     private fun Flow<Result.EffectResult>.toResultEffects(): Flow<Effect> {
         return mapLatest { result -> result.effect }
-    }
-
-    class Factory @Inject constructor() {
-        fun create(owner: SavedStateRegistryOwner): AbstractSavedStateViewModelFactory {
-            return object : AbstractSavedStateViewModelFactory(owner, null) {
-                override fun <T : ViewModel> create(
-                    key: String,
-                    modelClass: Class<T>,
-                    handle: SavedStateHandle
-                ): T {
-                    @Suppress("UNCHECKED_CAST")
-                    return RecordingsViewModel() as T
-                }
-            }
-        }
     }
 }

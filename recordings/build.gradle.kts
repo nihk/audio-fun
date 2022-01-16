@@ -2,6 +2,7 @@ plugins {
     `android-library`
     kotlin("android")
     kotlin("kapt")
+    hilt
 }
 
 androidLibraryConfig()

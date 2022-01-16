@@ -1,10 +1,12 @@
 package com.audio.recordings.data
 
 sealed class Event {
+    object ShowRecordingsEvent : Event()
     object RecordEvent : Event()
 }
 
 sealed class Result {
+    data class ShowRecordingsResult(val recordings: List<Recording>) : Result()
     data class EffectResult(val effect: Effect) : Result()
 }
 
@@ -13,5 +15,5 @@ sealed class Effect {
 }
 
 data class State(
-    val items: List<Any> = emptyList()
+    val recordings: List<Recording>? = null
 )

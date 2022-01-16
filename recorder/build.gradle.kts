@@ -3,7 +3,7 @@ plugins {
     kotlin("android")
     kotlin("kapt")
     `kotlin-parcelize`
-    `hilt`
+    hilt
 }
 
 androidLibraryConfig()
