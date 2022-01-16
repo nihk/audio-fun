@@ -10,6 +10,7 @@ androidLibraryConfig()
 
 dependencies {
     implementation(project(Modules.core))
+    implementation(project(Modules.files))
 
     implementation(Dependencies.multidex)
     implementation(Dependencies.coreKtx)

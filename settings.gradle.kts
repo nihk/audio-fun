@@ -1,2 +1,2 @@
-include(":app", ":core", ":recordings", ":recorder", ":playback")
+include(":app", ":core", ":files", ":recordings", ":recorder", ":playback")
 rootProject.name = "audio-fun"

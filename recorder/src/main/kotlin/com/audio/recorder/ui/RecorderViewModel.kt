@@ -129,8 +129,7 @@ class RecorderViewModel @Inject constructor(
             audioRepository.save(
                 cachedFilename = cachedFilename,
                 destinationFilename = event.filename,
-                copyToMusicFolder = event.copyToMusicFolder,
-                cleanupCache = true
+                copyToMusicFolder = event.copyToMusicFolder
             )
             Result.FinishedRecordingResult
         }
@@ -138,7 +137,7 @@ class RecorderViewModel @Inject constructor(
 
     private fun Flow<Event.DeleteSaveRecordingEvent>.toDeleteSaveRecordingResults(): Flow<Result> {
         return mapLatest {
-            audioRepository.deleteFromCache(handle.consume())
+            audioRepository.cleanup(handle.consume())
             Result.FinishedRecordingResult
         }
     }
