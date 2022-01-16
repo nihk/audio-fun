@@ -9,6 +9,8 @@ import com.audio.recordings.data.State
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
@@ -20,10 +22,6 @@ import kotlinx.coroutines.flow.transform
 class RecordingsViewModel @Inject constructor(
     private val repository: RecordingsRepository
 ) : MviViewModel<Event, Result, State, Effect>(State()) {
-    override fun onStart() {
-        processEvent(Event.ShowRecordingsEvent)
-    }
-
     override fun Result.reduce(state: State): State {
         return when (this) {
             is Result.ShowRecordingsResult -> state.copy(recordings = recordings)
@@ -41,7 +39,13 @@ class RecordingsViewModel @Inject constructor(
     }
 
     private fun Flow<Event.ShowRecordingsEvent>.toShowRecordingsResults(): Flow<Result> {
-        return flatMapLatest { repository.recordings() }
+        return distinctUntilChanged()
+            .flatMapLatest { event ->
+                when (event.action) {
+                    Event.ShowRecordingsEvent.Action.Start -> repository.recordings()
+                    Event.ShowRecordingsEvent.Action.Stop -> emptyFlow()
+                }
+            }
             .map(Result::ShowRecordingsResult)
     }
 

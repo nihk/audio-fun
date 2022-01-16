@@ -1,7 +1,11 @@
 package com.audio.recordings.data
 
 sealed class Event {
-    object ShowRecordingsEvent : Event()
+    data class ShowRecordingsEvent(val action: Action) : Event() {
+        enum class Action {
+            Start, Stop
+        }
+    }
     data class DeleteRecordingEvent(val recording: Recording) : Event()
     data class ToPlaybackEvent(val recording: Recording) : Event()
     object ToRecorderEvent : Event()

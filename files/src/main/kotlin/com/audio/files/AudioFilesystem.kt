@@ -53,7 +53,8 @@ class AndroidAudioFilesystem @Inject constructor(
     }
 
     private fun filesInternal(): Flow<List<File>> = callbackFlow {
-        val observer = object : FileObserver(context.filesDir) {
+        Log.d("asdf", "started observing files")
+            val observer = object : FileObserver(context.filesDir) {
             override fun onEvent(event: Int, path: String?) {
                 val wroteFile = event and (DELETE or CLOSE_WRITE) != 0
                 // Simply reading a file associated with this observer will call this onEvent back
@@ -65,7 +66,10 @@ class AndroidAudioFilesystem @Inject constructor(
 
         observer.startWatching()
 
-        awaitClose { observer.stopWatching() }
+        awaitClose {
+            Log.d("asdf", "stopped observing files")
+            observer.stopWatching()
+        }
     }
 
     private fun snapshot(): List<File> {
