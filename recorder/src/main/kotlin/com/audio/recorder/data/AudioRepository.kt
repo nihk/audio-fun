@@ -83,7 +83,8 @@ class AndroidAudioRepository @Inject constructor(
         val mediaRecorder = createMediaRecorder().apply {
             // Order matters here. See source code docs.
             setAudioSource(MediaRecorder.AudioSource.MIC)
-            setAudioSamplingRate(44100)
+            setAudioEncodingBitRate(128_000)
+            setAudioSamplingRate(44_100)
             setOutputFormat(MediaRecorder.OutputFormat.AAC_ADTS)
             setOutputFile(filename.absolute)
             setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
