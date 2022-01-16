@@ -94,9 +94,8 @@ class RecorderFragment @Inject constructor() : Fragment(R.layout.recorder_fragme
                         add<TellUserToEnablePermissionViaSettingsDialogFragment>()
                     }
                     is Effect.OpenAppSettingsEffect -> {
-                        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                            data = Uri.fromParts(effect.parts.scheme, effect.parts.packageName, null)
-                        }
+                        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                            .setData(Uri.fromParts(effect.parts.scheme, effect.parts.packageName, null))
                         startActivity(intent)
                     }
                     Effect.ConfirmStopRecordingEffect -> childFragmentManager.commit {
