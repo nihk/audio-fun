@@ -34,7 +34,7 @@ sealed class Result {
     object ResumeRecordingResult : Result()
     data class StopRecordingResult(val cachedFilename: CachedFilename) : Result()
     object NoOpResult : Result()
-    object CachedRecordingDeletedResult : Result()
+    object FinishedRecordingResult : Result()
     data class EffectResult(val effect: Effect) : Result()
     data class AmplitudeResult(val amplitude: Int) : Result()
 }
@@ -48,6 +48,7 @@ sealed class Effect {
     object TellUserToEnablePermissionFromSettingsEffect : Effect()
     data class OpenAppSettingsEffect(val parts: AppSettingsParts) : Effect()
     object ConfirmStopRecordingEffect : Effect()
+    object FinishedRecordingEffect : Effect()
 }
 
 data class State(

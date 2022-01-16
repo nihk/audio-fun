@@ -104,6 +104,7 @@ class RecorderFragment @Inject constructor() : Fragment(R.layout.recorder_fragme
                     Effect.ConfirmStopRecordingEffect -> childFragmentManager.commit {
                         add<ConfirmStopRecordingDialogFragment>()
                     }
+                    Effect.FinishedRecordingEffect -> requireActivity().onBackPressedDispatcher.onBackPressed()
                 }
             }
 

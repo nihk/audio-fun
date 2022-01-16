@@ -43,7 +43,7 @@ class RecorderViewModel @Inject constructor(
             Result.PauseRecordingResult -> state.copy(recording = State.Recording.Paused)
             Result.ResumeRecordingResult -> state.copy(recording = State.Recording.Recording)
             is Result.StopRecordingResult -> state.copy(recording = State.Recording.Stopped)
-            is Result.CachedRecordingDeletedResult -> state.copy(cachedFilename = null, amplitudes = emptyList())
+            is Result.FinishedRecordingResult -> state.copy(cachedFilename = null, amplitudes = emptyList())
             is Result.RequestPermissionResult.FromStartRecording -> state.copy(startRecordingAfterPermissionGranted = true)
             is Result.AmplitudeResult -> state.copy(amplitudes = state.amplitudes + amplitude)
             else -> state
@@ -135,14 +135,14 @@ class RecorderViewModel @Inject constructor(
                 copyToMusicFolder = event.copyToMusicFolder,
                 cleanupCache = true
             )
-            Result.CachedRecordingDeletedResult
+            Result.FinishedRecordingResult
         }
     }
 
     private fun Flow<Event.DeleteSaveRecordingEvent>.toDeleteSaveRecordingResults(): Flow<Result> {
         return mapLatest {
             audioRepository.deleteFromCache(handle.consume())
-            Result.CachedRecordingDeletedResult
+            Result.FinishedRecordingResult
         }
     }
 
@@ -162,7 +162,8 @@ class RecorderViewModel @Inject constructor(
             filterIsInstance<Result.RequestPermissionResult>().toRequestPermissionEffects(),
             filterIsInstance<Result.ErrorRecordingResult>().toErrorRecordingEffects(),
             filterIsInstance<Result.StopRecordingResult>().toPromptSaveFileEffects(),
-            filterIsInstance<Result.EffectResult>().toResultEffects()
+            filterIsInstance<Result.EffectResult>().toResultEffects(),
+            filterIsInstance<Result.FinishedRecordingResult>().toFinishedRecordngEffects()
         )
     }
 
@@ -180,5 +181,9 @@ class RecorderViewModel @Inject constructor(
 
     private fun Flow<Result.EffectResult>.toResultEffects(): Flow<Effect> {
         return mapLatest { result -> result.effect }
+    }
+
+    private fun Flow<Result.FinishedRecordingResult>.toFinishedRecordngEffects(): Flow<Effect> {
+        return mapLatest { Effect.FinishedRecordingEffect }
     }
 }
