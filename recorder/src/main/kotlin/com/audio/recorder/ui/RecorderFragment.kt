@@ -35,9 +35,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 
-// todo: pop fragment once recording is saved or deleted
 // todo: probably should have a foreground service for recording
-// todo: move to own gradle module
 @AndroidEntryPoint
 class RecorderFragment @Inject constructor() : Fragment(R.layout.recorder_fragment) {
     private val viewModel: RecorderViewModel by viewModels()
