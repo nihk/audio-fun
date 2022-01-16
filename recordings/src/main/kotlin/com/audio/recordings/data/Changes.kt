@@ -2,7 +2,8 @@ package com.audio.recordings.data
 
 sealed class Event {
     object ShowRecordingsEvent : Event()
-    object RecordEvent : Event()
+    data class DeleteRecordingEvent(val recording: Recording) : Event()
+    object ToRecorderEvent : Event()
 }
 
 sealed class Result {

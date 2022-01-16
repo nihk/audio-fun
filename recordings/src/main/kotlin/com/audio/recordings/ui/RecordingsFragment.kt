@@ -42,7 +42,8 @@ class RecordingsFragment @Inject constructor(
             }
 
         val events = merge(
-            binding.record.clicks().map { Event.RecordEvent }
+            binding.record.clicks().map { Event.ToRecorderEvent },
+            adapter.events()
         ).onEach(viewModel::processEvent)
 
         merge(states, effects, events).launchIn(viewLifecycleOwner.lifecycleScope)

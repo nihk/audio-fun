@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.transform
 
 @HiltViewModel
 class RecordingsViewModel @Inject constructor(
@@ -33,7 +34,8 @@ class RecordingsViewModel @Inject constructor(
     override fun Flow<Event>.toResults(): Flow<Result> {
         return merge(
             filterIsInstance<Event.ShowRecordingsEvent>().toShowRecordingsResults(),
-            filterIsInstance<Event.RecordEvent>().toRecordResults()
+            filterIsInstance<Event.DeleteRecordingEvent>().toDeleteRecordingResults(),
+            filterIsInstance<Event.ToRecorderEvent>().toRecordResults()
         )
     }
 
@@ -42,7 +44,11 @@ class RecordingsViewModel @Inject constructor(
             .map(Result::ShowRecordingsResult)
     }
 
-    private fun Flow<Event.RecordEvent>.toRecordResults(): Flow<Result> {
+    private fun Flow<Event.DeleteRecordingEvent>.toDeleteRecordingResults(): Flow<Result> {
+        return transform { event -> repository.delete(event.recording) }
+    }
+
+    private fun Flow<Event.ToRecorderEvent>.toRecordResults(): Flow<Result> {
         return mapLatest { Result.EffectResult(Effect.NavigateToRecorderEffect) }
     }
 
