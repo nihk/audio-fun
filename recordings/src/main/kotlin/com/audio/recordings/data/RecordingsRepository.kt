@@ -16,7 +16,10 @@ class FilesystemRecordingsRepository @Inject constructor(
     override fun recordings(): Flow<List<Recording>> {
         return filesystem.files().map { files ->
             files.map { file ->
-                Recording(name = file.name)
+                Recording(
+                    name = file.name,
+                    absolute = file.absolutePath
+                )
             }
         }
     }

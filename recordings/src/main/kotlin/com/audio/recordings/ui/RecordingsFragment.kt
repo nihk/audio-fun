@@ -38,6 +38,7 @@ class RecordingsFragment @Inject constructor(
             .onEach { effect ->
                 when (effect) {
                     Effect.NavigateToRecorderEffect -> recordingsNavigator.toRecorder()
+                    is Effect.NavigateToPlaybackEffect -> recordingsNavigator.toPlayback(effect.recordingName)
                 }
             }
 

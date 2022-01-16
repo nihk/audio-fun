@@ -33,6 +33,7 @@ class RecordingViewHolder(
     fun bind(recording: Recording) {
         binding.name.text = recording.name
         binding.delete.setOnClickListener { onEvent(Event.DeleteRecordingEvent(recording)) }
+        binding.root.setOnClickListener { onEvent(Event.ToPlaybackEvent(recording)) }
     }
 }
 

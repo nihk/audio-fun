@@ -28,6 +28,7 @@ interface AudioFilesystem {
     // This doesn't create any file, it just returns a handle to a path
     fun filename(name: String): Filename
     fun files(): Flow<List<File>>
+    suspend fun file(name: String): File
     fun delete(filename: String)
     fun save(filename: Filename, newName: String, copyToMusicFolder: Boolean)
 }
@@ -69,6 +70,10 @@ class AndroidAudioFilesystem @Inject constructor(
 
     private fun snapshot(): List<File> {
         return context.filesDir.listFiles().orEmpty().toList()
+    }
+
+    override suspend fun file(name: String): File {
+        return File(context.filesDir, name)
     }
 
     override fun delete(filename: String) {

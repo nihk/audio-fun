@@ -35,6 +35,7 @@ class RecordingsViewModel @Inject constructor(
         return merge(
             filterIsInstance<Event.ShowRecordingsEvent>().toShowRecordingsResults(),
             filterIsInstance<Event.DeleteRecordingEvent>().toDeleteRecordingResults(),
+            filterIsInstance<Event.ToPlaybackEvent>().toPlaybackResults(),
             filterIsInstance<Event.ToRecorderEvent>().toRecordResults()
         )
     }
@@ -46,6 +47,12 @@ class RecordingsViewModel @Inject constructor(
 
     private fun Flow<Event.DeleteRecordingEvent>.toDeleteRecordingResults(): Flow<Result> {
         return transform { event -> repository.delete(event.recording) }
+    }
+
+    private fun Flow<Event.ToPlaybackEvent>.toPlaybackResults(): Flow<Result> {
+        return mapLatest { event ->
+            Result.EffectResult(Effect.NavigateToPlaybackEffect(event.recording.absolute))
+        }
     }
 
     private fun Flow<Event.ToRecorderEvent>.toRecordResults(): Flow<Result> {
