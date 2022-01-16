@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.lifecycleScope
 import com.audio.core.extensions.clicks
 import com.audio.recordings.R
@@ -12,7 +14,9 @@ import com.audio.recordings.data.Event
 import com.audio.recordings.databinding.RecordingsFragmentBinding
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
@@ -23,7 +27,6 @@ class RecordingsFragment @Inject constructor(
     private val navigator: RecordingsNavigator
 ) : Fragment(R.layout.recordings_fragment) {
     private val viewModel: RecordingsViewModel by viewModels()
-    private val relay = MutableSharedFlow<Event>(extraBufferCapacity = 1)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -45,22 +48,25 @@ class RecordingsFragment @Inject constructor(
         val events = merge(
             binding.record.clicks().map { Event.ToRecorderEvent },
             adapter.events(),
-            relay
+            viewLifecycleOwner.lifecycle.events()
         ).onEach(viewModel::processEvent)
 
         merge(states, effects, events)
             .launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
-    override fun onStart() {
-        super.onStart()
-        relay.tryEmit(Event.ShowRecordingsEvent(Event.ShowRecordingsEvent.Action.Start))
-    }
-
-    override fun onStop() {
-        super.onStop()
-        if (!requireActivity().isChangingConfigurations) {
-            relay.tryEmit(Event.ShowRecordingsEvent(Event.ShowRecordingsEvent.Action.Stop))
+    private fun Lifecycle.events(): Flow<Event> = callbackFlow {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_START -> trySend(Event.ShowRecordingsEvent(Event.ShowRecordingsEvent.Action.Start))
+                Lifecycle.Event.ON_STOP -> if (!requireActivity().isChangingConfigurations) {
+                    trySend(Event.ShowRecordingsEvent(Event.ShowRecordingsEvent.Action.Stop))
+                }
+            }
         }
+
+        addObserver(observer)
+
+        awaitClose { removeObserver(observer) }
     }
 }
