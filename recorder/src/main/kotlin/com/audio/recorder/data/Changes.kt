@@ -33,7 +33,6 @@ sealed class Result {
     object PauseRecordingResult : Result()
     object ResumeRecordingResult : Result()
     data class StopRecordingResult(val cachedFilename: CachedFilename) : Result()
-    object NoOpResult : Result()
     object FinishedRecordingResult : Result()
     data class EffectResult(val effect: Effect) : Result()
     data class AmplitudeResult(val amplitude: Int) : Result()

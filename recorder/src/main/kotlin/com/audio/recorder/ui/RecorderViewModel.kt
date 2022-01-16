@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.transformLatest
 
 // todo: need to clean up audioRepository when VM is cleared?
 @HiltViewModel
@@ -93,36 +94,32 @@ class RecorderViewModel @Inject constructor(
     }
 
     private fun Flow<Event.PermissionResultEvent>.toPermissionResults(): Flow<Result> {
-        return mapLatest { event ->
+        return transformLatest { event ->
             when (event) {
                 Event.PermissionResultEvent.Granted -> if (states.value.startRecordingAfterPermissionGranted) {
                     Log.d("asdf", "permission granted; starting recording")
-                    Result.EffectResult(Effect.StartRecordingEffect)
-                } else {
-                    Result.NoOpResult // Granted permission from some other source, e.g. the initial screen prompt
+                    emit(Result.EffectResult(Effect.StartRecordingEffect))
                 }
                 Event.PermissionResultEvent.ShowRationale -> {
                     Log.d("asdf", "explaining need for permission to user")
-                    Result.EffectResult(Effect.PermissionRationaleEffect)
+                    emit(Result.EffectResult(Effect.PermissionRationaleEffect))
                 }
                 Event.PermissionResultEvent.Denied -> {
                     Log.d("asdf", "permission denied, prompting user to enable it via settings")
-                    Result.EffectResult(Effect.TellUserToEnablePermissionFromSettingsEffect)
+                    emit(Result.EffectResult(Effect.TellUserToEnablePermissionFromSettingsEffect))
                 }
             }
         }
     }
 
     private fun Flow<Event.RecordEvent>.toRecordingResults(): Flow<Result> {
-        return mapLatest { event ->
+        return transformLatest { event ->
             when (event) {
                 Event.RecordEvent.Start -> audioRepository.start()
                 Event.RecordEvent.Pause -> audioRepository.pause()
                 Event.RecordEvent.Resume -> audioRepository.resume()
                 Event.RecordEvent.Stop -> audioRepository.stop()
             }
-
-            Result.NoOpResult // Results are handled during repository emissions
         }
     }
 
