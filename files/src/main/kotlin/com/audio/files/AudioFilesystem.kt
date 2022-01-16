@@ -91,6 +91,10 @@ class AndroidAudioFilesystem @Inject constructor(
     ) {
         appScope.launch(ioContext) {
             val destination = File(context.filesDir, "$newName.${filename.extension}")
+            if (destination.exists()) {
+                destination.delete()
+            }
+
             val source = File(filename.absolute)
             source.copyTo(destination)
 
