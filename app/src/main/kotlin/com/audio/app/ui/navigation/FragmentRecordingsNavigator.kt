@@ -24,7 +24,7 @@ class FragmentRecordingsNavigator @Inject constructor(
     override fun toPlayback(recordingName: String) {
         fragmentManager.commit {
             setReorderingAllowed(true)
-            replace<PlaybackFragment>(containerId)
+            replace<PlaybackFragment>(containerId, args = PlaybackFragment.bundle(recordingName))
             addToBackStack(null)
         }
     }
