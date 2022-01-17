@@ -30,11 +30,11 @@ sealed class Result {
         object General : RequestPermissionResult()
         object FromStartRecording : RequestPermissionResult()
     }
-    data class StartRecordingResult(val cachedFilename: Filename) : Result()
+    data class StartRecordingResult(val tempFilename: Filename) : Result()
     data class ErrorRecordingResult(val throwable: Throwable) : Result()
     object PauseRecordingResult : Result()
     object ResumeRecordingResult : Result()
-    data class StopRecordingResult(val cachedFilename: Filename) : Result()
+    data class StopRecordingResult(val tempFilename: Filename) : Result()
     object FinishedRecordingResult : Result()
     data class EffectResult(val effect: Effect) : Result()
     data class AmplitudeResult(val amplitude: Int) : Result()
@@ -42,7 +42,7 @@ sealed class Result {
 
 sealed class Effect {
     data class ErrorRecordingEffect(val throwable: Throwable) : Effect()
-    data class PromptSaveFileEffect(val cachedFilename: Filename) : Effect()
+    data class PromptSaveFileEffect(val tempFilename: Filename) : Effect()
     data class RequestPermissionEffect(val permission: String) : Effect()
     object StartRecordingEffect : Effect()
     object PermissionRationaleEffect : Effect()
@@ -55,7 +55,7 @@ sealed class Effect {
 data class State(
     val recording: Recording = Recording.Stopped,
     val isPaused: Boolean = false,
-    val cachedFilename: Filename? = null,
+    val tempFilename: Filename? = null,
     val startRecordingAfterPermissionGranted: Boolean = false,
     val amplitudes: List<Int> = emptyList()
 ) {

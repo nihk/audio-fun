@@ -3,7 +3,9 @@ package com.audio.recorder.data
 import androidx.lifecycle.SavedStateHandle
 import com.audio.files.Filename
 
-class CachedFilenameHandle(private val delegate: SavedStateHandle) {
+// Save this temporary filename to state, so it'll survive across process recreation and enable
+// the user to save any recording that had been made before process death.
+class TempFilenameHandle(private val delegate: SavedStateHandle) {
     var filename: Filename?
         get() = delegate[KEY_CACHED_FILENAME]
         set(value) {

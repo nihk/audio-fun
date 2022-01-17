@@ -5,7 +5,7 @@ import androidx.lifecycle.SavedStateHandle
 import com.audio.core.mvi.MviViewModel
 import com.audio.recorder.data.AudioPermissionsRepository
 import com.audio.recorder.data.AudioRepository
-import com.audio.recorder.data.CachedFilenameHandle
+import com.audio.recorder.data.TempFilenameHandle
 import com.audio.recorder.data.Effect
 import com.audio.recorder.data.Event
 import com.audio.recorder.data.Result
@@ -27,7 +27,7 @@ class RecorderViewModel @Inject constructor(
     private val audioRepository: AudioRepository,
     private val permissionsRepository: AudioPermissionsRepository
 ) : MviViewModel<Event, Result, State, Effect>(State()) {
-    private val handle = CachedFilenameHandle(savedStateHandle)
+    private val handle = TempFilenameHandle(savedStateHandle)
 
     override fun onStart() {
         processEvent(Event.RequestPermissionEvent.General)
@@ -38,13 +38,13 @@ class RecorderViewModel @Inject constructor(
         return when (this) {
             is Result.StartRecordingResult -> state.copy(
                 recording = State.Recording.Recording,
-                cachedFilename = cachedFilename,
+                tempFilename = tempFilename,
                 startRecordingAfterPermissionGranted = false
             )
             Result.PauseRecordingResult -> state.copy(recording = State.Recording.Paused)
             Result.ResumeRecordingResult -> state.copy(recording = State.Recording.Recording)
             is Result.StopRecordingResult -> state.copy(recording = State.Recording.Stopped)
-            is Result.FinishedRecordingResult -> state.copy(cachedFilename = null, amplitudes = emptyList())
+            is Result.FinishedRecordingResult -> state.copy(tempFilename = null, amplitudes = emptyList())
             is Result.RequestPermissionResult.FromStartRecording -> state.copy(startRecordingAfterPermissionGranted = true)
             is Result.AmplitudeResult -> state.copy(amplitudes = state.amplitudes + amplitude)
             else -> state
@@ -69,8 +69,8 @@ class RecorderViewModel @Inject constructor(
             .map { emission ->
                 when (emission) {
                     is AudioRepository.Emission.StartedRecording -> {
-                        handle.filename = emission.cachedFilename
-                        Result.StartRecordingResult(emission.cachedFilename)
+                        handle.filename = emission.tempFilename
+                        Result.StartRecordingResult(emission.tempFilename)
                     }
                     is AudioRepository.Emission.Amplitude -> {
                         Log.d("asdf", "amplitude: ${emission.value}")
@@ -125,10 +125,10 @@ class RecorderViewModel @Inject constructor(
 
     private fun Flow<Event.SaveRecordingEvent>.toSaveRecordingResults(): Flow<Result> {
         return mapLatest { event ->
-            val cachedFilename = handle.consume()
+            val tempFilename = handle.consume()
             audioRepository.save(
-                cachedFilename = cachedFilename,
-                destinationFilename = event.filename,
+                tempFilename = tempFilename,
+                newName = event.filename,
                 copyToMusicFolder = event.copyToMusicFolder
             )
             Result.FinishedRecordingResult
@@ -172,7 +172,7 @@ class RecorderViewModel @Inject constructor(
     }
 
     private fun Flow<Result.StopRecordingResult>.toPromptSaveFileEffects(): Flow<Effect> {
-        return mapLatest { result -> Effect.PromptSaveFileEffect(result.cachedFilename) }
+        return mapLatest { result -> Effect.PromptSaveFileEffect(result.tempFilename) }
     }
 
     private fun Flow<Result.EffectResult>.toResultEffects(): Flow<Effect> {

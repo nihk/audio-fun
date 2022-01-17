@@ -31,14 +31,14 @@ interface AudioRepository {
     suspend fun stop()
     fun cleanup(filename: Filename)
     fun save(
-        cachedFilename: Filename,
-        destinationFilename: String,
+        tempFilename: Filename,
+        newName: String,
         copyToMusicFolder: Boolean
     )
 
     sealed class Emission {
         data class Error(val throwable: Throwable) : Emission()
-        data class StartedRecording(val cachedFilename: Filename) : Emission()
+        data class StartedRecording(val tempFilename: Filename) : Emission()
         data class Amplitude(val value: Int) : Emission()
         object PausedRecording : Emission()
         object ResumedRecording : Emission()
@@ -76,7 +76,7 @@ class AndroidAudioRepository @Inject constructor(
     override suspend fun start() {
         check(mediaRecorder == null)
         Log.d("asdf", "started recording")
-        val filename = filesystem.filename(
+        val filename = filesystem.tempFilename(
             name = "recording_${timestamp.current()}.aac"
         )
 
@@ -136,8 +136,8 @@ class AndroidAudioRepository @Inject constructor(
         filesystem.delete(filename.absolute)
     }
 
-    override fun save(cachedFilename: Filename, destinationFilename: String, copyToMusicFolder: Boolean) {
-        filesystem.save(cachedFilename, destinationFilename, copyToMusicFolder)
+    override fun save(tempFilename: Filename, newName: String, copyToMusicFolder: Boolean) {
+        filesystem.save(tempFilename, newName, copyToMusicFolder)
     }
 
     private fun createMediaRecorder(): MediaRecorder {

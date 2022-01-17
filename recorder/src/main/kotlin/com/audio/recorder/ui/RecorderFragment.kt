@@ -67,7 +67,7 @@ class RecorderFragment @Inject constructor() : Fragment(R.layout.recorder_fragme
 
         val states = viewModel.states
             .onEach { state ->
-                binding.recordingFilename.text = state.cachedFilename?.absolute.orEmpty()
+                binding.recordingFilename.text = state.tempFilename?.absolute.orEmpty()
                 binding.start.isVisible = state.recording == State.Recording.Stopped
                 binding.pause.isVisible = state.recording == State.Recording.Recording
                 binding.resume.isVisible = state.recording == State.Recording.Paused
@@ -82,7 +82,7 @@ class RecorderFragment @Inject constructor() : Fragment(R.layout.recorder_fragme
                     is Effect.PromptSaveFileEffect -> {
                         Log.d("asdf", "prompting to save file")
                         childFragmentManager.commit {
-                            add<SaveRecordingDialogFragment>(args = SaveRecordingDialogFragment.bundle(effect.cachedFilename.simple))
+                            add<SaveRecordingDialogFragment>(args = SaveRecordingDialogFragment.bundle(effect.tempFilename.simple))
                         }
                     }
                     is Effect.RequestPermissionEffect -> permissions.launch(arrayOf(effect.permission))

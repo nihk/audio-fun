@@ -25,8 +25,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 interface AudioFilesystem {
-    // This doesn't create any file, it just returns a handle to a path
-    fun filename(name: String): Filename
+    // This doesn't create any file, it just returns a handle to a temporary path
+    fun tempFilename(name: String): Filename
     fun files(): Flow<List<File>>
     suspend fun file(name: String): File
     fun delete(filename: String)
@@ -38,7 +38,7 @@ class AndroidAudioFilesystem @Inject constructor(
     @IoContext private val ioContext: CoroutineContext,
     @AppCoroutineScope private val appScope: CoroutineScope
 ) : AudioFilesystem {
-    override fun filename(name: String): Filename {
+    override fun tempFilename(name: String): Filename {
         return Filename(
             simple = name.popExtension,
             absolute = "${context.cacheDir.absolutePath}/$name",
