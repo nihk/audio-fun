@@ -6,10 +6,11 @@ import android.util.Log
 import androidx.core.net.toUri
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 
 interface PlaybackRepository {
@@ -24,6 +25,8 @@ interface PlaybackRepository {
         object Playing : Emission()
         object Paused : Emission()
         object Stopped : Emission()
+        object Completed : Emission()
+        data class Error(val what: Int) : Emission()
     }
 }
 
@@ -40,13 +43,15 @@ class MediaPlayerPlaybackRepository @Inject constructor(
         }
     }
 
-    private fun playerEventStream(): Flow<PlaybackRepository.Emission> = flow {
+    private fun playerEventStream(): Flow<PlaybackRepository.Emission> = callbackFlow {
         val player = requireNotNull(player)
-        emit(PlaybackRepository.Emission.Created)
+        trySend(PlaybackRepository.Emission.Created)
 
         val listener = object :
             MediaPlayer.OnInfoListener,
-            MediaPlayer.OnPreparedListener {
+            MediaPlayer.OnPreparedListener,
+            MediaPlayer.OnCompletionListener,
+            MediaPlayer.OnErrorListener {
 
             override fun onInfo(mp: MediaPlayer, what: Int, extra: Int): Boolean {
                 Log.d("asdf", "info: $what, extra: $extra")
@@ -57,11 +62,32 @@ class MediaPlayerPlaybackRepository @Inject constructor(
             override fun onPrepared(mp: MediaPlayer) {
                 Log.d("asdf", "prepared player")
             }
+
+            override fun onCompletion(mp: MediaPlayer) {
+                // fixme: not getting called back with aac file?
+                Log.d("asdf", "completed")
+                trySend(PlaybackRepository.Emission.Completed)
+            }
+
+            override fun onError(mp: MediaPlayer, what: Int, extra: Int): Boolean {
+                trySend(PlaybackRepository.Emission.Error(what))
+                return false // todo
+            }
         }
 
         with(player) {
             setOnInfoListener(listener)
             setOnPreparedListener(listener)
+            setOnErrorListener(listener)
+        }
+
+        awaitClose {
+            Log.d("asdf", "unlistening to player")
+            with(player) {
+                setOnInfoListener(null)
+                setOnPreparedListener(null)
+                setOnErrorListener(null)
+            }
         }
     }
 
@@ -74,8 +100,7 @@ class MediaPlayerPlaybackRepository @Inject constructor(
 
     override suspend fun play() {
         Log.d("asdf", "starting playback")
-        val player = requireNotNull(player)
-        player.start()
+        requireNotNull(player).start()
     }
 
     override suspend fun pause() {
@@ -85,13 +110,13 @@ class MediaPlayerPlaybackRepository @Inject constructor(
 
     override suspend fun stop() {
         Log.d("asdf", "tearing down MediaPlayer")
-        val player = requireNotNull(player)
-        player.setOnInfoListener(null)
-        player.setOnPreparedListener(null)
-        player.stop()
-        player.reset()
-        player.release()
-        this.player = null
+        with(requireNotNull(player)) {
+            stop()
+            reset()
+            release()
+        }
+
+        player = null
         events.emit(Event.Released)
     }
 
