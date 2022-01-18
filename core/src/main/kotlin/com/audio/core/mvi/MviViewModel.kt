@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.shareIn
@@ -22,8 +23,9 @@ abstract class MviViewModel<Event, Result, State, Effect>(initialState: State) :
         events
             .onSubscription {
                 check(events.subscriptionCount.value == 1)
-                onStart()
+                onSubscription()
             }
+            .onCompletion { onCompletion() }
             .share() // Share emissions to individual Flows within toResults()
             .toResults()
             .share() // Share emissions to states and effects
@@ -51,7 +53,8 @@ abstract class MviViewModel<Event, Result, State, Effect>(initialState: State) :
         )
     }
 
-    protected open fun onStart() = Unit
+    protected open suspend fun onSubscription() = Unit
+    protected open suspend fun onCompletion() = Unit
     protected abstract fun Flow<Event>.toResults(): Flow<Result>
     protected abstract fun Result.reduce(state: State): State
     protected open fun Flow<Result>.toEffects(): Flow<Effect> = emptyFlow()

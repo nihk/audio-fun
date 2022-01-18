@@ -29,7 +29,7 @@ class RecorderViewModel @Inject constructor(
 ) : MviViewModel<Event, Result, State, Effect>(State()) {
     private val handle = TempFilenameHandle(savedStateHandle)
 
-    override fun onStart() {
+    override suspend fun onSubscription() {
         processEvent(Event.RequestPermissionEvent.General)
         processEvent(Event.ListenToMediaRecording)
     }

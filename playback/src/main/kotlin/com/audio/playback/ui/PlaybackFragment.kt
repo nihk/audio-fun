@@ -7,21 +7,38 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.audio.playback.R
+import com.audio.playback.data.Effect
+import com.audio.playback.data.Event
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.onEach
 
 @AndroidEntryPoint
 class PlaybackFragment @Inject constructor() : Fragment(R.layout.playback_fragment) {
     private val viewModel: PlaybackViewModel by viewModels()
+    private val relay = MutableSharedFlow<Event>(extraBufferCapacity = 1)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val states = viewModel.states
-        val effects = viewModel.effects
+            .onEach { state ->
+                // todo: render
+            }
 
-        merge(states, effects).launchIn(viewLifecycleOwner.lifecycleScope)
+        val effects = viewModel.effects
+            .onEach { effect ->
+                when (effect) {
+                    Effect.ListeningToPlayerEffect -> relay.tryEmit(Event.CreatePlayerEvent(start = true))
+                }
+            }
+
+        val events = merge(relay)
+            .onEach(viewModel::processEvent)
+
+        merge(states, effects, events).launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
     companion object {
