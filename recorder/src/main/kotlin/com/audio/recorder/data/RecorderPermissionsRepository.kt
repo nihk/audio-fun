@@ -4,14 +4,14 @@ import android.Manifest
 import com.audio.core.ui.ApplicationContext
 import javax.inject.Inject
 
-internal interface AudioPermissionsRepository {
+internal interface RecorderPermissionsRepository {
     fun permission(): String
     fun appSettingsParts(): AppSettingsParts
 }
 
-internal class AndroidAudioPermissionsRepository @Inject constructor(
+internal class AndroidRecorderPermissionsRepository @Inject constructor(
     private val context: ApplicationContext
-) : AudioPermissionsRepository {
+) : RecorderPermissionsRepository {
     override fun permission(): String {
         return Manifest.permission.RECORD_AUDIO
     }

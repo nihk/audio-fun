@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 
-internal interface AudioRepository {
+internal interface RecorderRepository {
     fun emissions(): Flow<Emission>
     // todo: pass in some recording config?
     suspend fun start()
@@ -45,30 +45,30 @@ internal interface AudioRepository {
     }
 }
 
-internal class AndroidAudioRepository @Inject constructor(
+internal class AndroidRecorderRepository @Inject constructor(
     private val context: ApplicationContext,
     @IoContext private val ioContext: CoroutineContext,
     private val timestamp: Timestamp,
     private val filesystem: AudioFilesystem
-) : AudioRepository {
+) : RecorderRepository {
     private val events = MutableSharedFlow<Event>()
     private var mediaRecorder: MediaRecorder? = null
 
     override fun emissions() = events.flatMapLatest { event ->
         when (event) {
-            is Event.StartedRecording -> flowOf(AudioRepository.Emission.StartedRecording(event.filename))
+            is Event.StartedRecording -> flowOf(RecorderRepository.Emission.StartedRecording(event.filename))
             Event.PollAmplitude -> flow {
                 Log.d("asdf", "polling amplitude")
                 val recorder = requireNotNull(mediaRecorder)
                 while (currentCoroutineContext().isActive) {
-                    emit(AudioRepository.Emission.Amplitude(recorder.maxAmplitude.scaled()))
+                    emit(RecorderRepository.Emission.Amplitude(recorder.maxAmplitude.scaled()))
                     delay(500L)
                 }
             }
-            is Event.Error -> flowOf(AudioRepository.Emission.Error(event.throwable))
-            Event.Pause -> flowOf(AudioRepository.Emission.PausedRecording)
-            Event.Resume -> flowOf(AudioRepository.Emission.ResumedRecording)
-            Event.FinishedRecording -> flowOf(AudioRepository.Emission.FinishedRecording)
+            is Event.Error -> flowOf(RecorderRepository.Emission.Error(event.throwable))
+            Event.Pause -> flowOf(RecorderRepository.Emission.PausedRecording)
+            Event.Resume -> flowOf(RecorderRepository.Emission.ResumedRecording)
+            Event.FinishedRecording -> flowOf(RecorderRepository.Emission.FinishedRecording)
         }
     }
 

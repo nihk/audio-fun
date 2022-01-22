@@ -1,9 +1,9 @@
 package com.audio.recorder.di
 
-import com.audio.recorder.data.AndroidAudioPermissionsRepository
-import com.audio.recorder.data.AndroidAudioRepository
-import com.audio.recorder.data.AudioPermissionsRepository
-import com.audio.recorder.data.AudioRepository
+import com.audio.recorder.data.AndroidRecorderPermissionsRepository
+import com.audio.recorder.data.AndroidRecorderRepository
+import com.audio.recorder.data.RecorderPermissionsRepository
+import com.audio.recorder.data.RecorderRepository
 import com.audio.recorder.data.SystemTimestamp
 import com.audio.recorder.data.Timestamp
 import dagger.Binds
@@ -15,10 +15,10 @@ import dagger.hilt.android.components.ViewModelComponent
 @InstallIn(ViewModelComponent::class)
 internal interface RecorderViewModelModule {
     @Binds
-    fun audioRepository(audioRepository: AndroidAudioRepository): AudioRepository
+    fun recorderRepository(repository: AndroidRecorderRepository): RecorderRepository
 
     @Binds
-    fun audioPermissionsRepository(repository: AndroidAudioPermissionsRepository): AudioPermissionsRepository
+    fun recorderPermissionsRepository(repository: AndroidRecorderPermissionsRepository): RecorderPermissionsRepository
 
     @Binds
     fun timestamp(timestamp: SystemTimestamp): Timestamp

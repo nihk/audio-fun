@@ -3,8 +3,8 @@ package com.audio.recorder.ui
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import com.audio.core.mvi.MviViewModel
-import com.audio.recorder.data.AudioPermissionsRepository
-import com.audio.recorder.data.AudioRepository
+import com.audio.recorder.data.RecorderPermissionsRepository
+import com.audio.recorder.data.RecorderRepository
 import com.audio.recorder.data.TempFilenameHandle
 import com.audio.recorder.data.Effect
 import com.audio.recorder.data.Event
@@ -24,8 +24,8 @@ import kotlinx.coroutines.flow.transformLatest
 @HiltViewModel
 internal class RecorderViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val audioRepository: AudioRepository,
-    private val permissionsRepository: AudioPermissionsRepository
+    private val recorderRepository: RecorderRepository,
+    private val permissionsRepository: RecorderPermissionsRepository
 ) : MviViewModel<Event, Result, State, Effect>(State()) {
     private val handle = TempFilenameHandle(savedStateHandle)
 
@@ -65,21 +65,21 @@ internal class RecorderViewModel @Inject constructor(
     }
 
     private fun Flow<Event.ListenToMediaRecording>.toMediaRecordingResults(): Flow<Result> {
-        return flatMapLatest { audioRepository.emissions() }
+        return flatMapLatest { recorderRepository.emissions() }
             .map { emission ->
                 when (emission) {
-                    is AudioRepository.Emission.StartedRecording -> {
+                    is RecorderRepository.Emission.StartedRecording -> {
                         handle.filename = emission.tempFilename
                         Result.StartRecordingResult(emission.tempFilename)
                     }
-                    is AudioRepository.Emission.Amplitude -> {
+                    is RecorderRepository.Emission.Amplitude -> {
                         Log.d("asdf", "amplitude: ${emission.value}")
                         Result.AmplitudeResult(emission.value)
                     }
-                    is AudioRepository.Emission.Error -> Result.ErrorRecordingResult(emission.throwable)
-                    AudioRepository.Emission.PausedRecording -> Result.PauseRecordingResult
-                    AudioRepository.Emission.ResumedRecording -> Result.ResumeRecordingResult
-                    AudioRepository.Emission.FinishedRecording -> Result.StopRecordingResult(handle.require())
+                    is RecorderRepository.Emission.Error -> Result.ErrorRecordingResult(emission.throwable)
+                    RecorderRepository.Emission.PausedRecording -> Result.PauseRecordingResult
+                    RecorderRepository.Emission.ResumedRecording -> Result.ResumeRecordingResult
+                    RecorderRepository.Emission.FinishedRecording -> Result.StopRecordingResult(handle.require())
                 }
             }
     }
@@ -115,10 +115,10 @@ internal class RecorderViewModel @Inject constructor(
     private fun Flow<Event.RecordEvent>.toRecordingResults(): Flow<Result> {
         return transformLatest { event ->
             when (event) {
-                Event.RecordEvent.Start -> audioRepository.start()
-                Event.RecordEvent.Pause -> audioRepository.pause()
-                Event.RecordEvent.Resume -> audioRepository.resume()
-                Event.RecordEvent.Stop -> audioRepository.stop()
+                Event.RecordEvent.Start -> recorderRepository.start()
+                Event.RecordEvent.Pause -> recorderRepository.pause()
+                Event.RecordEvent.Resume -> recorderRepository.resume()
+                Event.RecordEvent.Stop -> recorderRepository.stop()
             }
         }
     }
@@ -126,7 +126,7 @@ internal class RecorderViewModel @Inject constructor(
     private fun Flow<Event.SaveRecordingEvent>.toSaveRecordingResults(): Flow<Result> {
         return mapLatest { event ->
             val tempFilename = handle.consume()
-            audioRepository.save(
+            recorderRepository.save(
                 tempFilename = tempFilename,
                 newName = event.filename,
                 copyToMusicFolder = event.copyToMusicFolder
@@ -137,7 +137,7 @@ internal class RecorderViewModel @Inject constructor(
 
     private fun Flow<Event.DeleteSaveRecordingEvent>.toDeleteSaveRecordingResults(): Flow<Result> {
         return mapLatest {
-            audioRepository.cleanup(handle.consume())
+            recorderRepository.cleanup(handle.consume())
             Result.FinishedRecordingResult
         }
     }
