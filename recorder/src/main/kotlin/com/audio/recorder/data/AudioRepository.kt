@@ -76,8 +76,9 @@ internal class AndroidAudioRepository @Inject constructor(
     override suspend fun start() {
         check(mediaRecorder == null)
         Log.d("asdf", "started recording")
+        val outputFormat = MediaRecorder.OutputFormat.AAC_ADTS
         val filename = filesystem.tempFilename(
-            name = "recording_${timestamp.current()}.aac"
+            name = "recording_${timestamp.current()}.${outputFormat.outputFormatExtension()}"
         )
 
         val mediaRecorder = createMediaRecorder().apply {
@@ -85,7 +86,7 @@ internal class AndroidAudioRepository @Inject constructor(
             setAudioSource(MediaRecorder.AudioSource.MIC)
             setAudioEncodingBitRate(128_000)
             setAudioSamplingRate(44_100)
-            setOutputFormat(MediaRecorder.OutputFormat.AAC_ADTS)
+            setOutputFormat(outputFormat)
             setOutputFile(filename.absolute)
             setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
         }.also { this.mediaRecorder = it }
@@ -101,6 +102,14 @@ internal class AndroidAudioRepository @Inject constructor(
             if (throwable is CancellationException) throw throwable
             events.emit(Event.Error(throwable))
             this.mediaRecorder = null
+        }
+    }
+
+    private fun Int.outputFormatExtension(): String {
+        return when (this) {
+            MediaRecorder.OutputFormat.MPEG_4 -> "mp4"
+            MediaRecorder.OutputFormat.AAC_ADTS -> "aac"
+            else -> error("Unknown output format: $this")
         }
     }
 
