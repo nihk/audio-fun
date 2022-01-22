@@ -10,40 +10,29 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
 
 interface PlaybackRepository {
-    fun emissions(): Flow<Emission>
-    suspend fun create(filename: String)
+    suspend fun create(filename: String, play: Boolean): Flow<Emission>
     suspend fun play()
-    suspend fun stop()
     suspend fun pause()
 
     sealed class Emission {
         object Created : Emission()
         data class PlayingStateChanged(val isPlaying: Boolean) : Emission()
-        object Stopped : Emission()
     }
 }
 
 class MediaPlayerPlaybackRepository @Inject constructor(
     @ApplicationContext private val context: Context
 ) : PlaybackRepository {
-    private val events = MutableSharedFlow<Event>()
-    private var player: MediaPlayerWrapper? = null // fixme: maybe create and set the value of this field within the callbackFlow? and use a CompletableDeferred?
+    private var player: MediaPlayerWrapper? = null
 
-    override fun emissions(): Flow<PlaybackRepository.Emission> = events.flatMapLatest { event ->
-        when (event) {
-            Event.Created -> playerEventStream()
-            Event.Released -> flowOf<PlaybackRepository.Emission>(PlaybackRepository.Emission.Stopped)
-        }
-    }
-
-    private fun playerEventStream(): Flow<PlaybackRepository.Emission> = callbackFlow {
-        val player = requireNotNull(player)
+    override suspend fun create(filename: String, play: Boolean) = callbackFlow {
+        check(player == null)
+        val player = MediaPlayer.create(context, filename.toUri())
+            .wrap()
+            .also { this@MediaPlayerPlaybackRepository.player = it }
         trySend(PlaybackRepository.Emission.Created)
 
         val listener: (isPlaying: Boolean) -> Unit = { isPlaying ->
@@ -52,17 +41,20 @@ class MediaPlayerPlaybackRepository @Inject constructor(
 
         player.setIsPlayingListener(listener)
 
-        awaitClose {
-            Log.d("asdf", "unlistening to player")
-            player.setIsPlayingListener(null)
+        if (play) {
+            play()
         }
-    }
 
-    override suspend fun create(filename: String) {
-        Log.d("asdf", "creating MediaPlayer")
-        check(player == null)
-        player = MediaPlayer.create(context, filename.toUri()).wrap()
-        events.emit(Event.Created)
+        awaitClose {
+            Log.d("asdf", "tearing down player")
+            with(player) {
+                setIsPlayingListener(null)
+                stop()
+                reset()
+                release()
+            }
+            this@MediaPlayerPlaybackRepository.player = null
+        }
     }
 
     override suspend fun play() {
@@ -73,22 +65,5 @@ class MediaPlayerPlaybackRepository @Inject constructor(
     override suspend fun pause() {
         Log.d("asdf", "pausing playback")
         requireNotNull(player).pause()
-    }
-
-    override suspend fun stop() {
-        Log.d("asdf", "tearing down MediaPlayer")
-        with(requireNotNull(player)) {
-            stop()
-            reset()
-            release()
-        }
-
-        player = null
-        events.emit(Event.Released)
-    }
-
-    private sealed class Event {
-        object Created : Event()
-        object Released : Event()
     }
 }

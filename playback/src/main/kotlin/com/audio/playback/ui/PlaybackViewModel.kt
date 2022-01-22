@@ -1,6 +1,5 @@
 package com.audio.playback.ui
 
-import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import com.audio.core.extensions.requireNotNull
 import com.audio.core.mvi.MviViewModel
@@ -14,10 +13,9 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
-import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.flow.transformLatest
+import kotlinx.coroutines.flow.transform
 
 @HiltViewModel
 class PlaybackViewModel @Inject constructor(
@@ -25,53 +23,38 @@ class PlaybackViewModel @Inject constructor(
     private val repository: PlaybackRepository
 ) : MviViewModel<Event, Result, State, Effect>(State()) {
     override suspend fun onSubscription() {
-        processEvent(Event.ListenToPlayerEvent)
-    }
-
-    override suspend fun onCompletion() {
-        repository.stop()
+        processEvent(Event.CreatePlayerEvent(start = true))
     }
 
     override fun Result.reduce(state: State): State {
-        return state.copy()
+        return when (this) {
+            is Result.PlayingStateChangedResult -> state.copy(isPlaying = isPlaying)
+            else -> state
+        }
     }
 
     override fun Flow<Event>.toResults(): Flow<Result> {
         return merge(
-            filterIsInstance<Event.ListenToPlayerEvent>().toStartPlayerResults(),
-            filterIsInstance<Event.CreatePlayerEvent>().toCreatePlayerResults()
+            filterIsInstance<Event.CreatePlayerEvent>().toCreatePlayerResults(),
+            filterIsInstance<Event.Play>().transform { repository.play() },
+            filterIsInstance<Event.Pause>().transform { repository.pause() }
         )
     }
 
-    private fun Flow<Event.ListenToPlayerEvent>.toStartPlayerResults(): Flow<Result> {
-        return flatMapLatest { event -> repository.emissions() }
-            .mapLatest { emission ->
-                // todo: do something with emissions
-                Log.d("asdf", "got emission: $emission")
-                Result.NoOpResult
-            }
-            .onStart<Result> {
-                emit(Result.EffectResult(Effect.ListeningToPlayerEffect))
-            }
-    }
-
     private fun Flow<Event.CreatePlayerEvent>.toCreatePlayerResults(): Flow<Result> {
-        return transformLatest { event ->
+        return flatMapLatest { event ->
             val recordingName = handle.get<String>(PlaybackFragment.KEY_RECORDING_NAME).requireNotNull()
-            repository.create(recordingName) // todo: might need to emit another effect for created here
-            if (event.start) {
-                repository.play()
+            repository.create(recordingName, event.start)
+        }.map { emission ->
+            when (emission) {
+                PlaybackRepository.Emission.Created -> Result.NoOpResult
+                is PlaybackRepository.Emission.PlayingStateChanged -> Result.PlayingStateChangedResult(emission.isPlaying)
             }
         }
     }
 
     override fun Flow<Result>.toEffects(): Flow<Effect> {
         return merge(
-            filterIsInstance<Result.EffectResult>().toResultEffects(),
         )
-    }
-
-    private fun Flow<Result.EffectResult>.toResultEffects(): Flow<Effect> {
-        return mapLatest { result -> result.effect }
     }
 }
