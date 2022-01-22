@@ -13,7 +13,7 @@ import dagger.hilt.android.components.ViewModelComponent
 
 @Module
 @InstallIn(ViewModelComponent::class)
-interface RecorderViewModelModule {
+internal interface RecorderViewModelModule {
     @Binds
     fun audioRepository(audioRepository: AndroidAudioRepository): AudioRepository
 

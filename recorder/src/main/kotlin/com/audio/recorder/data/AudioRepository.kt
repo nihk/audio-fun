@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 
-interface AudioRepository {
+internal interface AudioRepository {
     fun emissions(): Flow<Emission>
     // todo: pass in some recording config?
     suspend fun start()
@@ -46,7 +46,7 @@ interface AudioRepository {
     }
 }
 
-class AndroidAudioRepository @Inject constructor(
+internal class AndroidAudioRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     @IoContext private val ioContext: CoroutineContext,
     private val timestamp: Timestamp,

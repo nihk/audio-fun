@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 
-class SaveRecordingDialogFragment @Inject constructor(
+internal class SaveRecordingDialogFragment @Inject constructor(
     private val saveRecording: SaveRecording
 ) : DialogFragment(R.layout.save_recording_dialog_fragment) {
 

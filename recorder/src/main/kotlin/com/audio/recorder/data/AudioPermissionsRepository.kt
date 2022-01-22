@@ -5,12 +5,12 @@ import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
-interface AudioPermissionsRepository {
+internal interface AudioPermissionsRepository {
     fun permission(): String
     fun appSettingsParts(): AppSettingsParts
 }
 
-class AndroidAudioPermissionsRepository @Inject constructor(
+internal class AndroidAudioPermissionsRepository @Inject constructor(
     @ApplicationContext private val context: Context
 ) : AudioPermissionsRepository {
     override fun permission(): String {
@@ -25,7 +25,7 @@ class AndroidAudioPermissionsRepository @Inject constructor(
     }
 }
 
-data class AppSettingsParts(
+internal data class AppSettingsParts(
     val scheme: String,
     val packageName: String
 )

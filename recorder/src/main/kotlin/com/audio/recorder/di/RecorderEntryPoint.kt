@@ -8,7 +8,7 @@ import dagger.hilt.android.components.FragmentComponent
 
 @EntryPoint
 @InstallIn(FragmentComponent::class)
-interface RecorderEntryPoint {
+internal interface RecorderEntryPoint {
     val fragmentFactory: AppFragmentFactory
     val externalEvents: ExternalEvents
 }

@@ -12,7 +12,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 
-interface PlaybackRepository {
+internal interface PlaybackRepository {
     suspend fun create(filename: String, play: Boolean): Flow<Emission>
     suspend fun play()
     suspend fun pause()
@@ -23,7 +23,7 @@ interface PlaybackRepository {
     }
 }
 
-class MediaPlayerPlaybackRepository @Inject constructor(
+internal class MediaPlayerPlaybackRepository @Inject constructor(
     @ApplicationContext private val context: Context
 ) : PlaybackRepository {
     private var player: MediaPlayerWrapper? = null

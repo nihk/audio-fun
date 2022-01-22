@@ -5,7 +5,7 @@ import com.audio.files.Filename
 
 // Save this temporary filename to state, so it'll survive across process recreation and enable
 // the user to save any recording that had been made before process death.
-class TempFilenameHandle(private val delegate: SavedStateHandle) {
+internal class TempFilenameHandle(private val delegate: SavedStateHandle) {
     var filename: Filename?
         get() = delegate[KEY_CACHED_FILENAME]
         set(value) {

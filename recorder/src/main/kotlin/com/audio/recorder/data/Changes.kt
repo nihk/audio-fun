@@ -2,7 +2,7 @@ package com.audio.recorder.data
 
 import com.audio.files.Filename
 
-sealed class Event {
+internal sealed class Event {
     object ListenToMediaRecording : Event()
     sealed class RequestPermissionEvent : Event() {
         object General : RequestPermissionEvent()
@@ -25,7 +25,7 @@ sealed class Event {
     object BackPressWhileRecordingEvent : Event()
 }
 
-sealed class Result {
+internal sealed class Result {
     sealed class RequestPermissionResult : Result() {
         object General : RequestPermissionResult()
         object FromStartRecording : RequestPermissionResult()
@@ -40,7 +40,7 @@ sealed class Result {
     data class AmplitudeResult(val amplitude: Int) : Result()
 }
 
-sealed class Effect {
+internal sealed class Effect {
     data class ErrorRecordingEffect(val throwable: Throwable) : Effect()
     data class PromptSaveFileEffect(val tempFilename: Filename) : Effect()
     data class RequestPermissionEffect(val permission: String) : Effect()
@@ -52,7 +52,7 @@ sealed class Effect {
     object FinishedRecordingEffect : Effect()
 }
 
-data class State(
+internal data class State(
     val recording: Recording = Recording.Stopped,
     val isPaused: Boolean = false,
     val tempFilename: Filename? = null,

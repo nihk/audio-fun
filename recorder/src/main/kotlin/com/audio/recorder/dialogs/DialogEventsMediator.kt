@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import com.audio.recorder.data.Event
 
 @FragmentScoped
-class DialogEventsMediator @Inject constructor() :
+internal class DialogEventsMediator @Inject constructor() :
     ExternalEvents,
     StopRecording,
     PermissionRationale,
@@ -41,19 +41,19 @@ class DialogEventsMediator @Inject constructor() :
     }
 }
 
-interface ExternalEvents {
+internal interface ExternalEvents {
     fun events(): Flow<Event>
 }
 
-interface StopRecording {
+internal interface StopRecording {
     fun stopRecording()
 }
 
-interface PermissionRationale {
+internal interface PermissionRationale {
     fun onPermissionRationaleShown()
 }
 
-interface SaveRecording {
+internal interface SaveRecording {
     fun result(result: Result)
 
     sealed class Result {
@@ -62,6 +62,6 @@ interface SaveRecording {
     }
 }
 
-interface OpenAppSettings {
+internal interface OpenAppSettings {
     fun openAppSettings()
 }

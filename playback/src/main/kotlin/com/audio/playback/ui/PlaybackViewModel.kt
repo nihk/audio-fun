@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.transform
 
 @HiltViewModel
-class PlaybackViewModel @Inject constructor(
+internal class PlaybackViewModel @Inject constructor(
     private val handle: SavedStateHandle,
     private val repository: PlaybackRepository
 ) : MviViewModel<Event, Result, State, Effect>(State()) {

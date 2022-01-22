@@ -22,7 +22,7 @@ import dagger.multibindings.IntoMap
 
 @Module
 @InstallIn(FragmentComponent::class)
-interface RecorderFragmentModule {
+internal interface RecorderFragmentModule {
     @Binds
     @IntoMap
     @FragmentKey(ConfirmStopRecordingDialogFragment::class)

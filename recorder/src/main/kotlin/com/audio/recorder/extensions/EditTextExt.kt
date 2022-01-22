@@ -8,7 +8,7 @@ import androidx.core.widget.doOnTextChanged
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 
-fun EditText.textChanges() = callbackFlow {
+internal fun EditText.textChanges() = callbackFlow {
     val textWatcher = doOnTextChanged { text, _, _, _ ->
         trySend(text)
     }
@@ -17,7 +17,7 @@ fun EditText.textChanges() = callbackFlow {
 }
 
 // https://developer.squareup.com/blog/showing-the-android-keyboard-reliably/
-fun EditText.focusAndShowKeyboard() {
+internal fun EditText.focusAndShowKeyboard() {
     /**
      * This is to be called when the window already has focus.
      */

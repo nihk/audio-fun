@@ -6,7 +6,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.DialogFragment
 import javax.inject.Inject
 
-class PermissionRationaleDialogFragment @Inject constructor(
+internal class PermissionRationaleDialogFragment @Inject constructor(
     private val permissionRationale: PermissionRationale
 ) : DialogFragment() {
 

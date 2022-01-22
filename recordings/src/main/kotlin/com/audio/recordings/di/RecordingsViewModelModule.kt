@@ -9,7 +9,7 @@ import dagger.hilt.android.components.ViewModelComponent
 
 @Module
 @InstallIn(ViewModelComponent::class)
-interface RecordingsViewModelModule {
+internal interface RecordingsViewModelModule {
     @Binds
     fun recordingsRepository(repository: FilesystemRecordingsRepository): RecordingsRepository
 }

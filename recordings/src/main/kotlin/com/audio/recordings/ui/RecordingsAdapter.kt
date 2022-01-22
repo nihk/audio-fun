@@ -11,7 +11,7 @@ import com.audio.recordings.databinding.RecordingItemBinding
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 
-class RecordingsAdapter : ListAdapter<Recording, RecordingViewHolder>(RecordingItemCallback()) {
+internal class RecordingsAdapter : ListAdapter<Recording, RecordingViewHolder>(RecordingItemCallback()) {
     private val events = MutableSharedFlow<Event>(extraBufferCapacity = 1)
     fun events(): Flow<Event> = events
 
@@ -26,7 +26,7 @@ class RecordingsAdapter : ListAdapter<Recording, RecordingViewHolder>(RecordingI
     }
 }
 
-class RecordingViewHolder(
+internal class RecordingViewHolder(
     private val binding: RecordingItemBinding,
     private val onEvent: (Event) -> Unit
 ) : RecyclerView.ViewHolder(binding.root) {
@@ -37,7 +37,7 @@ class RecordingViewHolder(
     }
 }
 
-class RecordingItemCallback : DiffUtil.ItemCallback<Recording>() {
+internal class RecordingItemCallback : DiffUtil.ItemCallback<Recording>() {
     override fun areItemsTheSame(oldItem: Recording, newItem: Recording): Boolean {
         return oldItem.name == newItem.name
     }

@@ -1,6 +1,6 @@
 package com.audio.recordings.data
 
-sealed class Event {
+internal sealed class Event {
     data class ShowRecordingsEvent(val action: Action) : Event() {
         enum class Action {
             Start, Stop
@@ -11,16 +11,16 @@ sealed class Event {
     object ToRecorderEvent : Event()
 }
 
-sealed class Result {
+internal sealed class Result {
     data class ShowRecordingsResult(val recordings: List<Recording>) : Result()
     data class EffectResult(val effect: Effect) : Result()
 }
 
-sealed class Effect {
+internal sealed class Effect {
     object NavigateToRecorderEffect : Effect()
     data class NavigateToPlaybackEffect(val recordingName: String) : Effect()
 }
 
-data class State(
+internal data class State(
     val recordings: List<Recording>? = null
 )

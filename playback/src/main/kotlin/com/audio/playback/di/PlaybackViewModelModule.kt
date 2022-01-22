@@ -9,7 +9,7 @@ import dagger.hilt.android.components.ViewModelComponent
 
 @Module
 @InstallIn(ViewModelComponent::class)
-interface PlaybackViewModelModule {
+internal interface PlaybackViewModelModule {
     @Binds
     fun playbackRepository(repository: MediaPlayerPlaybackRepository): PlaybackRepository
 }

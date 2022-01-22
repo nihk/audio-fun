@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.transform
 
 @HiltViewModel
-class RecordingsViewModel @Inject constructor(
+internal class RecordingsViewModel @Inject constructor(
     private val repository: RecordingsRepository
 ) : MviViewModel<Event, Result, State, Effect>(State()) {
     override fun Result.reduce(state: State): State {

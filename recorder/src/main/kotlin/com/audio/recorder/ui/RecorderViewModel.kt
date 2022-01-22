@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.transformLatest
 
 // todo: need to clean up audioRepository when VM is cleared?
 @HiltViewModel
-class RecorderViewModel @Inject constructor(
+internal class RecorderViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val audioRepository: AudioRepository,
     private val permissionsRepository: AudioPermissionsRepository
