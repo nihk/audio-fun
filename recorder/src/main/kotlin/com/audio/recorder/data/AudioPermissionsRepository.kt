@@ -1,8 +1,7 @@
 package com.audio.recorder.data
 
 import android.Manifest
-import android.content.Context
-import dagger.hilt.android.qualifiers.ApplicationContext
+import com.audio.core.ui.ApplicationContext
 import javax.inject.Inject
 
 internal interface AudioPermissionsRepository {
@@ -11,7 +10,7 @@ internal interface AudioPermissionsRepository {
 }
 
 internal class AndroidAudioPermissionsRepository @Inject constructor(
-    @ApplicationContext private val context: Context
+    private val context: ApplicationContext
 ) : AudioPermissionsRepository {
     override fun permission(): String {
         return Manifest.permission.RECORD_AUDIO

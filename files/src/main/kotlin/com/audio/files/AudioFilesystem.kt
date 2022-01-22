@@ -2,7 +2,6 @@ package com.audio.files
 
 import android.content.ContentResolver
 import android.content.ContentValues
-import android.content.Context
 import android.net.Uri
 import android.os.Build
 import android.os.FileObserver
@@ -11,7 +10,7 @@ import android.util.Log
 import androidx.core.content.contentValuesOf
 import com.audio.core.di.AppCoroutineScope
 import com.audio.core.di.IoContext
-import dagger.hilt.android.qualifiers.ApplicationContext
+import com.audio.core.ui.ApplicationContext
 import java.io.File
 import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
@@ -34,7 +33,7 @@ interface AudioFilesystem {
 }
 
 class AndroidAudioFilesystem @Inject constructor(
-    @ApplicationContext private val context: Context,
+    private val context: ApplicationContext,
     @IoContext private val ioContext: CoroutineContext,
     @AppCoroutineScope private val appScope: CoroutineScope
 ) : AudioFilesystem {

@@ -1,5 +1,7 @@
 package com.audio.core.di
 
+import android.app.Application
+import com.audio.core.ui.ApplicationContext
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -20,5 +22,8 @@ interface CoreModule {
         @Provides
         @AppCoroutineScope
         fun appScope(): CoroutineScope = GlobalScope
+
+        @Provides
+        fun appContext(application: Application) = ApplicationContext(application)
     }
 }

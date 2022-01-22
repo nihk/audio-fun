@@ -1,13 +1,12 @@
 package com.audio.recorder.data
 
-import android.content.Context
 import android.media.MediaRecorder
 import android.os.Build
 import android.util.Log
 import com.audio.core.di.IoContext
+import com.audio.core.ui.ApplicationContext
 import com.audio.files.AudioFilesystem
 import com.audio.files.Filename
-import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 import kotlin.math.roundToInt
@@ -47,7 +46,7 @@ internal interface AudioRepository {
 }
 
 internal class AndroidAudioRepository @Inject constructor(
-    @ApplicationContext private val context: Context,
+    private val context: ApplicationContext,
     @IoContext private val ioContext: CoroutineContext,
     private val timestamp: Timestamp,
     private val filesystem: AudioFilesystem

@@ -1,12 +1,11 @@
 package com.audio.playback.data
 
-import android.content.Context
 import android.media.MediaPlayer
 import android.util.Log
 import androidx.core.net.toUri
+import com.audio.core.ui.ApplicationContext
 import com.audio.playback.player.MediaPlayerWrapper
 import com.audio.playback.player.wrap
-import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -25,7 +24,7 @@ internal interface PlaybackRepository {
 }
 
 internal class MediaPlayerPlaybackRepository @Inject constructor(
-    @ApplicationContext private val context: Context
+    private val context: ApplicationContext
 ) : PlaybackRepository {
     private var player: MediaPlayerWrapper? = null
 
