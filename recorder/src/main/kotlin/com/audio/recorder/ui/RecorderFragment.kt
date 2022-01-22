@@ -82,9 +82,8 @@ class RecorderFragment @Inject constructor() : Fragment(R.layout.recorder_fragme
                 binding.resume.isVisible = state.recording == State.Recording.Paused
                 binding.stop.isVisible = state.recording != State.Recording.Stopped
                 backPressWhileRecording.isEnabled = state.recording != State.Recording.Stopped
-                adapter.submitList(state.amplitudes) {
-                    binding.amplitudes.scrollToPosition(state.amplitudes.lastIndex)
-                }
+                adapter.update(state.amplitudes)
+                binding.amplitudes.scrollToPosition(state.amplitudes.lastIndex)
             }
 
         val effects = viewModel.effects

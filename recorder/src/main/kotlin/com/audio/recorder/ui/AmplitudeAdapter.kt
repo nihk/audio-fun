@@ -1,16 +1,17 @@
 package com.audio.recorder.ui
 
+import android.annotation.SuppressLint
 import android.util.DisplayMetrics
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.view.updateLayoutParams
-import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.audio.recorder.databinding.AmplitudeItemBinding
 import kotlin.math.roundToInt
 
-class AmplitudeAdapter : ListAdapter<Int, AmplitudeViewHolder>(AmplitudeDiffCallback) {
+class AmplitudeAdapter : RecyclerView.Adapter<AmplitudeViewHolder>() {
+    private val amplitudes = mutableListOf<Int>()
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AmplitudeViewHolder {
         return LayoutInflater.from(parent.context)
             .let { inflater -> AmplitudeItemBinding.inflate(inflater, parent, false) }
@@ -18,7 +19,27 @@ class AmplitudeAdapter : ListAdapter<Int, AmplitudeViewHolder>(AmplitudeDiffCall
     }
 
     override fun onBindViewHolder(holder: AmplitudeViewHolder, position: Int) {
-        holder.bind(getItem(position))
+        holder.bind(amplitudes[position])
+    }
+
+    override fun getItemCount(): Int = amplitudes.size
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun update(newList: List<Int>) {
+        if (amplitudes == newList) return
+
+        if (amplitudes.isEmpty() && newList.isNotEmpty()) {
+            amplitudes.addAll(newList)
+            notifyDataSetChanged()
+        } else {
+            val numItemsInserted = newList.size - amplitudes.size
+            val currentLastIndex = amplitudes.size
+            amplitudes.apply {
+                clear()
+                addAll(newList)
+            }
+            notifyItemRangeInserted(currentLastIndex, numItemsInserted)
+        }
     }
 }
 
@@ -31,15 +52,5 @@ class AmplitudeViewHolder(val binding: AmplitudeItemBinding) : RecyclerView.View
 
     private fun Int.dp(): Int {
         return (this.toFloat() * binding.root.context.resources.displayMetrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT).roundToInt()
-    }
-}
-
-object AmplitudeDiffCallback : DiffUtil.ItemCallback<Int>() {
-    override fun areItemsTheSame(oldItem: Int, newItem: Int): Boolean {
-        return oldItem == newItem
-    }
-
-    override fun areContentsTheSame(oldItem: Int, newItem: Int): Boolean {
-        return oldItem == newItem
     }
 }
