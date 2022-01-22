@@ -3,7 +3,9 @@ package com.audio.playback.player
 import android.media.MediaPlayer
 
 internal class MediaPlayerWrapper(private val delegate: MediaPlayer) {
-    interface Listener : MediaPlayer.OnCompletionListener {
+    interface Listener :
+        MediaPlayer.OnCompletionListener,
+        MediaPlayer.OnErrorListener {
         fun onPlayingChanged(isPlaying: Boolean)
     }
     var listener: Listener? = null

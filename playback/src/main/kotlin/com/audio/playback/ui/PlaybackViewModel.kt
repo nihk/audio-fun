@@ -49,12 +49,14 @@ internal class PlaybackViewModel @Inject constructor(
             when (emission) {
                 PlaybackRepository.Emission.Created -> Result.NoOpResult
                 is PlaybackRepository.Emission.PlayingStateChanged -> Result.PlayingStateChangedResult(emission.isPlaying)
+                is PlaybackRepository.Emission.Error -> Result.EffectResult(Effect.ErrorEffect(emission.what))
             }
         }
     }
 
     override fun Flow<Result>.toEffects(): Flow<Effect> {
         return merge(
+            filterIsInstance<Result.EffectResult>().map { result -> result.effect }
         )
     }
 }

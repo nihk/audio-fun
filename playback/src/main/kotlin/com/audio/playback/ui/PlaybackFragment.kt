@@ -2,12 +2,14 @@ package com.audio.playback.ui
 
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.audio.core.extensions.clicks
 import com.audio.playback.R
+import com.audio.playback.data.Effect
 import com.audio.playback.data.Event
 import com.audio.playback.databinding.PlaybackFragmentBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -39,6 +41,7 @@ class PlaybackFragment @Inject constructor() : Fragment(R.layout.playback_fragme
         val effects = viewModel.effects
             .onEach { effect ->
                 when (effect) {
+                    is Effect.ErrorEffect -> Toast.makeText(view.context, "Error: ${effect.what}", Toast.LENGTH_LONG).show()
                 }
             }
 

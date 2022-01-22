@@ -20,6 +20,7 @@ internal interface PlaybackRepository {
     sealed class Emission {
         object Created : Emission()
         data class PlayingStateChanged(val isPlaying: Boolean) : Emission()
+        data class Error(val what: Int): Emission()
     }
 }
 
@@ -42,6 +43,11 @@ internal class MediaPlayerPlaybackRepository @Inject constructor(
 
             override fun onCompletion(mp: MediaPlayer) {
                 trySend(PlaybackRepository.Emission.PlayingStateChanged(false))
+            }
+
+            override fun onError(mp: MediaPlayer, what: Int, extra: Int): Boolean {
+                trySend(PlaybackRepository.Emission.Error(what))
+                return false // todo
             }
         }
 
