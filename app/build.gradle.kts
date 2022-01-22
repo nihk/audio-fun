@@ -33,7 +33,7 @@ dependencies {
     implementation(Dependencies.Dagger.Hilt.runtime)
     implementation(Dependencies.Lifecycle.runtime)
 
-    debugImplementation(Dependencies.leakCanary)
+//    debugImplementation(Dependencies.leakCanary)
     debugImplementation(Dependencies.Fragment.testing)
 
     testImplementation(Dependencies.junit)
