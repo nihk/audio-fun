@@ -2,13 +2,24 @@ package com.audio.playback.player
 
 import android.media.MediaPlayer
 
+/**
+ * There's no callback for play/pause and other commonly expected media information from the
+ * MediaPlayer APIs. This class tries to fill in those gaps.
+ */
 internal class MediaPlayerWrapper(private val delegate: MediaPlayer) {
     interface Listener :
         MediaPlayer.OnCompletionListener,
         MediaPlayer.OnErrorListener {
         fun onPlayingChanged(isPlaying: Boolean)
     }
-    var listener: Listener? = null
+
+    private var internalListener: Listener? = null
+    var listener: Listener?
+        get() = internalListener
+        set(value) {
+            internalListener = value
+            delegate.setOnCompletionListener(value)
+        }
 
     fun start() {
         delegate.start()
