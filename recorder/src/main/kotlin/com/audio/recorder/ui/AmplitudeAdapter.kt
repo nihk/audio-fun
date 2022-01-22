@@ -45,12 +45,16 @@ class AmplitudeAdapter : RecyclerView.Adapter<AmplitudeViewHolder>() {
 
 class AmplitudeViewHolder(val binding: AmplitudeItemBinding) : RecyclerView.ViewHolder(binding.root) {
     fun bind(amplitude: Int) {
+        binding.bar.scaleY = 1f
         binding.bar.updateLayoutParams {
-            height = amplitude.dp()
+            height = 1.dp().roundToInt()
+        }
+        if (amplitude > 0) {
+            binding.bar.animate().scaleY(-amplitude.dp())
         }
     }
 
-    private fun Int.dp(): Int {
-        return (this.toFloat() * binding.root.context.resources.displayMetrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT).roundToInt()
+    private fun Int.dp(): Float {
+        return this.toFloat() * binding.root.context.resources.displayMetrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT
     }
 }

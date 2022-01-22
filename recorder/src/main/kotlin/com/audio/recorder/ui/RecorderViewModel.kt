@@ -12,7 +12,6 @@ import com.audio.recorder.data.State
 import com.audio.recorder.data.TempFilenameHandle
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import kotlin.math.max
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.flatMapLatest
@@ -75,7 +74,7 @@ internal class RecorderViewModel @Inject constructor(
                     }
                     is RecorderRepository.Emission.Amplitude -> {
                         Log.d("asdf", "amplitude: ${emission.value}")
-                        Result.AmplitudesResult(states.value.amplitudes + max(1, emission.value))
+                        Result.AmplitudesResult(states.value.amplitudes + emission.value)
                     }
                     is RecorderRepository.Emission.Error -> Result.ErrorRecordingResult(emission.throwable)
                     RecorderRepository.Emission.PausedRecording -> Result.PauseRecordingResult
