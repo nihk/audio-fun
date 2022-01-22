@@ -62,7 +62,7 @@ internal class AndroidRecorderRepository @Inject constructor(
                 val recorder = requireNotNull(mediaRecorder)
                 while (currentCoroutineContext().isActive) {
                     emit(RecorderRepository.Emission.Amplitude(recorder.maxAmplitude.scaled()))
-                    delay(500L)
+                    delay(200L)
                 }
             }
             is Event.Error -> flowOf(RecorderRepository.Emission.Error(event.throwable))

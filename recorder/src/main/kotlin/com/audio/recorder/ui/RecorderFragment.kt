@@ -14,6 +14,8 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.audio.core.di.entryPoint
 import com.audio.core.extensions.clicks
 import com.audio.recorder.R
@@ -63,6 +65,13 @@ class RecorderFragment @Inject constructor() : Fragment(R.layout.recorder_fragme
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val binding = RecorderFragmentBinding.bind(view)
 
+        val adapter = AmplitudeAdapter()
+        val layoutManager = LinearLayoutManager(view.context).apply {
+            stackFromEnd = true
+            orientation = RecyclerView.HORIZONTAL
+        }
+        binding.amplitudes.adapter = adapter
+        binding.amplitudes.layoutManager = layoutManager
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, backPressWhileRecording)
 
         val states = viewModel.states
@@ -73,6 +82,9 @@ class RecorderFragment @Inject constructor() : Fragment(R.layout.recorder_fragme
                 binding.resume.isVisible = state.recording == State.Recording.Paused
                 binding.stop.isVisible = state.recording != State.Recording.Stopped
                 backPressWhileRecording.isEnabled = state.recording != State.Recording.Stopped
+                adapter.submitList(state.amplitudes) {
+                    binding.amplitudes.scrollToPosition(state.amplitudes.lastIndex)
+                }
             }
 
         val effects = viewModel.effects

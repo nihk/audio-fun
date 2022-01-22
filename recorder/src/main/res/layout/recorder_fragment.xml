@@ -3,8 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".ui.MainActivity">
+    android:layout_height="match_parent">
 
     <TextView
         android:id="@+id/recording_filename"
@@ -16,6 +15,18 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:text="this is a very long filename that will probably overflow.3gp" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/amplitudes"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/amplitude_max_height"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/recording_filename"
+        tools:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        tools:listitem="@layout/amplitude_item"
+        tools:orientation="horizontal"
+        tools:stackFromEnd="true" />
 
     <Button
         android:id="@+id/start"
@@ -43,7 +54,7 @@
         android:text="resume"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/pause"/>
+        app:layout_constraintTop_toBottomOf="@id/pause" />
 
     <Button
         android:id="@+id/stop"

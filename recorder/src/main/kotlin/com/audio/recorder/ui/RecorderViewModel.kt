@@ -3,15 +3,16 @@ package com.audio.recorder.ui
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import com.audio.core.mvi.MviViewModel
-import com.audio.recorder.data.RecorderPermissionsRepository
-import com.audio.recorder.data.RecorderRepository
-import com.audio.recorder.data.TempFilenameHandle
 import com.audio.recorder.data.Effect
 import com.audio.recorder.data.Event
+import com.audio.recorder.data.RecorderPermissionsRepository
+import com.audio.recorder.data.RecorderRepository
 import com.audio.recorder.data.Result
 import com.audio.recorder.data.State
+import com.audio.recorder.data.TempFilenameHandle
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlin.math.max
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.flatMapLatest
@@ -74,8 +75,7 @@ internal class RecorderViewModel @Inject constructor(
                     }
                     is RecorderRepository.Emission.Amplitude -> {
                         Log.d("asdf", "amplitude: ${emission.value}")
-                        val amplitudes = (states.value.amplitudes + emission.value).takeLast(10)
-                        Result.AmplitudesResult(amplitudes)
+                        Result.AmplitudesResult(states.value.amplitudes + max(1, emission.value))
                     }
                     is RecorderRepository.Emission.Error -> Result.ErrorRecordingResult(emission.throwable)
                     RecorderRepository.Emission.PausedRecording -> Result.PauseRecordingResult
