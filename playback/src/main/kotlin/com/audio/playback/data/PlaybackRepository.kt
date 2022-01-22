@@ -35,11 +35,17 @@ class MediaPlayerPlaybackRepository @Inject constructor(
             .also { this@MediaPlayerPlaybackRepository.player = it }
         trySend(PlaybackRepository.Emission.Created)
 
-        val listener: (isPlaying: Boolean) -> Unit = { isPlaying ->
-            trySend(PlaybackRepository.Emission.PlayingStateChanged(isPlaying))
+        val listener = object : MediaPlayerWrapper.Listener {
+            override fun onPlayingChanged(isPlaying: Boolean) {
+                trySend(PlaybackRepository.Emission.PlayingStateChanged(isPlaying))
+            }
+
+            override fun onCompletion(mp: MediaPlayer) {
+                trySend(PlaybackRepository.Emission.PlayingStateChanged(false))
+            }
         }
 
-        player.setIsPlayingListener(listener)
+        player.listener = listener
 
         if (play) {
             play()
@@ -48,7 +54,7 @@ class MediaPlayerPlaybackRepository @Inject constructor(
         awaitClose {
             Log.d("asdf", "tearing down player")
             with(player) {
-                setIsPlayingListener(null)
+                this@with.listener = null
                 stop()
                 reset()
                 release()

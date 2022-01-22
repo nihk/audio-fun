@@ -3,22 +3,19 @@ package com.audio.playback.player
 import android.media.MediaPlayer
 
 class MediaPlayerWrapper(private val delegate: MediaPlayer) {
-    private var isPlayingListener: ((Boolean) -> Unit)? = null
-
-    val isPlaying: Boolean get() = delegate.isPlaying
-
-    fun setIsPlayingListener(isPlayingListener: ((Boolean) -> Unit)?) {
-        this.isPlayingListener = isPlayingListener
+    interface Listener : MediaPlayer.OnCompletionListener {
+        fun onPlayingChanged(isPlaying: Boolean)
     }
+    var listener: Listener? = null
 
     fun start() {
         delegate.start()
-        isPlayingListener?.invoke(delegate.isPlaying)
+        listener?.onPlayingChanged(delegate.isPlaying)
     }
 
     fun pause() {
         delegate.pause()
-        isPlayingListener?.invoke(delegate.isPlaying)
+        listener?.onPlayingChanged(delegate.isPlaying)
     }
 
     fun stop() {
