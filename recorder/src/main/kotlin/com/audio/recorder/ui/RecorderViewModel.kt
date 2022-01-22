@@ -46,7 +46,7 @@ internal class RecorderViewModel @Inject constructor(
             is Result.StopRecordingResult -> state.copy(recording = State.Recording.Stopped)
             is Result.FinishedRecordingResult -> state.copy(tempFilename = null, amplitudes = emptyList())
             is Result.RequestPermissionResult.FromStartRecording -> state.copy(startRecordingAfterPermissionGranted = true)
-            is Result.AmplitudeResult -> state.copy(amplitudes = state.amplitudes + amplitude)
+            is Result.AmplitudesResult -> state.copy(amplitudes = amplitudes)
             else -> state
         }
     }
@@ -74,7 +74,8 @@ internal class RecorderViewModel @Inject constructor(
                     }
                     is RecorderRepository.Emission.Amplitude -> {
                         Log.d("asdf", "amplitude: ${emission.value}")
-                        Result.AmplitudeResult(emission.value)
+                        val amplitudes = (states.value.amplitudes + emission.value).takeLast(10)
+                        Result.AmplitudesResult(amplitudes)
                     }
                     is RecorderRepository.Emission.Error -> Result.ErrorRecordingResult(emission.throwable)
                     RecorderRepository.Emission.PausedRecording -> Result.PauseRecordingResult

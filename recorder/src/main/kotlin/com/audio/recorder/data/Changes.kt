@@ -37,7 +37,7 @@ internal sealed class Result {
     data class StopRecordingResult(val tempFilename: Filename) : Result()
     object FinishedRecordingResult : Result()
     data class EffectResult(val effect: Effect) : Result()
-    data class AmplitudeResult(val amplitude: Int) : Result()
+    data class AmplitudesResult(val amplitudes: List<Int>) : Result()
 }
 
 internal sealed class Effect {
