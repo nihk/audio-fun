@@ -4,6 +4,8 @@ import android.content.Context
 import android.media.MediaPlayer
 import android.util.Log
 import androidx.core.net.toUri
+import com.audio.playback.player.MediaPlayerWrapper
+import com.audio.playback.player.wrap
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.coroutines.channels.awaitClose
@@ -22,11 +24,8 @@ interface PlaybackRepository {
 
     sealed class Emission {
         object Created : Emission()
-        object Playing : Emission()
-        object Paused : Emission()
+        data class PlayingStateChanged(val isPlaying: Boolean) : Emission()
         object Stopped : Emission()
-        object Completed : Emission()
-        data class Error(val what: Int) : Emission()
     }
 }
 
@@ -34,12 +33,12 @@ class MediaPlayerPlaybackRepository @Inject constructor(
     @ApplicationContext private val context: Context
 ) : PlaybackRepository {
     private val events = MutableSharedFlow<Event>()
-    private var player: MediaPlayer? = null
+    private var player: MediaPlayerWrapper? = null // fixme: maybe create and set the value of this field within the callbackFlow? and use a CompletableDeferred?
 
     override fun emissions(): Flow<PlaybackRepository.Emission> = events.flatMapLatest { event ->
         when (event) {
             Event.Created -> playerEventStream()
-            Event.Released -> flowOf<PlaybackRepository.Emission>(PlaybackRepository.Emission.Paused)
+            Event.Released -> flowOf<PlaybackRepository.Emission>(PlaybackRepository.Emission.Stopped)
         }
     }
 
@@ -47,54 +46,22 @@ class MediaPlayerPlaybackRepository @Inject constructor(
         val player = requireNotNull(player)
         trySend(PlaybackRepository.Emission.Created)
 
-        val listener = object :
-            MediaPlayer.OnInfoListener,
-            MediaPlayer.OnPreparedListener,
-            MediaPlayer.OnCompletionListener,
-            MediaPlayer.OnErrorListener {
-
-            override fun onInfo(mp: MediaPlayer, what: Int, extra: Int): Boolean {
-                Log.d("asdf", "info: $what, extra: $extra")
-                // todo: emit here
-                return false
-            }
-
-            override fun onPrepared(mp: MediaPlayer) {
-                Log.d("asdf", "prepared player")
-            }
-
-            override fun onCompletion(mp: MediaPlayer) {
-                // fixme: not getting called back with aac file?
-                Log.d("asdf", "completed")
-                trySend(PlaybackRepository.Emission.Completed)
-            }
-
-            override fun onError(mp: MediaPlayer, what: Int, extra: Int): Boolean {
-                trySend(PlaybackRepository.Emission.Error(what))
-                return false // todo
-            }
+        val listener: (isPlaying: Boolean) -> Unit = { isPlaying ->
+            trySend(PlaybackRepository.Emission.PlayingStateChanged(isPlaying))
         }
 
-        with(player) {
-            setOnInfoListener(listener)
-            setOnPreparedListener(listener)
-            setOnErrorListener(listener)
-        }
+        player.setIsPlayingListener(listener)
 
         awaitClose {
             Log.d("asdf", "unlistening to player")
-            with(player) {
-                setOnInfoListener(null)
-                setOnPreparedListener(null)
-                setOnErrorListener(null)
-            }
+            player.setIsPlayingListener(null)
         }
     }
 
     override suspend fun create(filename: String) {
         Log.d("asdf", "creating MediaPlayer")
         check(player == null)
-        player = MediaPlayer.create(context, filename.toUri())
+        player = MediaPlayer.create(context, filename.toUri()).wrap()
         events.emit(Event.Created)
     }
 

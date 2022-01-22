@@ -58,7 +58,7 @@ class PlaybackViewModel @Inject constructor(
     private fun Flow<Event.CreatePlayerEvent>.toCreatePlayerResults(): Flow<Result> {
         return transformLatest { event ->
             val recordingName = handle.get<String>(PlaybackFragment.KEY_RECORDING_NAME).requireNotNull()
-            repository.create(recordingName)
+            repository.create(recordingName) // todo: might need to emit another effect for created here
             if (event.start) {
                 repository.play()
             }
