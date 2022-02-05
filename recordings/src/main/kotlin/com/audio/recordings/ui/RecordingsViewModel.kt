@@ -1,13 +1,16 @@
 package com.audio.recordings.ui
 
+import androidx.lifecycle.AbstractSavedStateViewModelFactory
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.savedstate.SavedStateRegistryOwner
 import com.audio.core.mvi.MviViewModel
 import com.audio.recordings.data.Effect
 import com.audio.recordings.data.Event
 import com.audio.recordings.data.RecordingsRepository
 import com.audio.recordings.data.Result
 import com.audio.recordings.data.State
-import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
@@ -18,8 +21,7 @@ import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.transform
 
-@HiltViewModel
-internal class RecordingsViewModel @Inject constructor(
+internal class RecordingsViewModel(
     private val repository: RecordingsRepository
 ) : MviViewModel<Event, Result, State, Effect>(State()) {
     override fun Result.reduce(state: State): State {
@@ -71,5 +73,21 @@ internal class RecordingsViewModel @Inject constructor(
 
     private fun Flow<Result.EffectResult>.toResultEffects(): Flow<Effect> {
         return mapLatest { result -> result.effect }
+    }
+
+    class Factory(
+        private val repository: RecordingsRepository
+    ) {
+        fun create(owner: SavedStateRegistryOwner): ViewModelProvider.Factory {
+            return object : AbstractSavedStateViewModelFactory(owner, null) {
+                override fun <T : ViewModel> create(
+                    key: String,
+                    modelClass: Class<T>,
+                    handle: SavedStateHandle
+                ): T {
+                    return RecordingsViewModel(repository) as T
+                }
+            }
+        }
     }
 }

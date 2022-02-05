@@ -3,11 +3,9 @@ package com.audio.recorder.data
 import android.media.MediaRecorder
 import android.os.Build
 import android.util.Log
-import com.audio.core.di.IoContext
 import com.audio.core.ui.ApplicationContext
 import com.audio.files.AudioFilesystem
 import com.audio.files.Filename
-import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 import kotlin.math.roundToInt
 import kotlinx.coroutines.CancellationException
@@ -45,9 +43,9 @@ internal interface RecorderRepository {
     }
 }
 
-internal class AndroidRecorderRepository @Inject constructor(
+internal class AndroidRecorderRepository(
     private val context: ApplicationContext,
-    @IoContext private val ioContext: CoroutineContext,
+    private val ioContext: CoroutineContext,
     private val timestamp: Timestamp,
     private val filesystem: AudioFilesystem
 ) : RecorderRepository {

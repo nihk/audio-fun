@@ -6,14 +6,14 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.savedstate.SavedStateRegistryOwner
 import com.audio.core.extensions.clicks
 import com.audio.recordings.R
 import com.audio.recordings.data.Effect
 import com.audio.recordings.data.Event
 import com.audio.recordings.databinding.RecordingsFragmentBinding
-import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -22,11 +22,11 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 
-@AndroidEntryPoint
-class RecordingsFragment @Inject constructor(
-    private val navigator: RecordingsNavigator
+internal class RecordingsFragment(
+    private val navigator: RecordingsNavigator,
+    private val viewModelFactory: (SavedStateRegistryOwner) -> ViewModelProvider.Factory
 ) : Fragment(R.layout.recordings_fragment) {
-    private val viewModel: RecordingsViewModel by viewModels()
+    private val viewModel: RecordingsViewModel by viewModels { viewModelFactory(this) }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -62,6 +62,7 @@ class RecordingsFragment @Inject constructor(
                 Lifecycle.Event.ON_STOP -> if (!requireActivity().isChangingConfigurations) {
                     trySend(Event.ShowRecordingsEvent(Event.ShowRecordingsEvent.Action.Stop))
                 }
+                else -> Unit
             }
         }
 

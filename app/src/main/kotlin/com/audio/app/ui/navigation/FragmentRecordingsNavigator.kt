@@ -1,22 +1,21 @@
 package com.audio.app.ui.navigation
 
+import androidx.annotation.IdRes
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.commit
-import androidx.fragment.app.replace
-import com.audio.app.di.FragmentContainerId
-import com.audio.playback.ui.PlaybackFragment
-import com.audio.recorder.ui.RecorderFragment
+import com.audio.playback.ui.PlaybackDirections
+import com.audio.recorder.ui.RecorderDirections
 import com.audio.recordings.ui.RecordingsNavigator
-import javax.inject.Inject
 
-class FragmentRecordingsNavigator @Inject constructor(
+class FragmentRecordingsNavigator(
     private val fragmentManager: FragmentManager,
-    @FragmentContainerId private val containerId: Int
+    @IdRes private val containerId: Int,
 ) : RecordingsNavigator {
     override fun toRecorder() {
         fragmentManager.commit {
             setReorderingAllowed(true)
-            replace<RecorderFragment>(containerId)
+            val directions = RecorderDirections()
+            replace(containerId, directions.screen, directions.arguments)
             addToBackStack(null)
         }
     }
@@ -24,7 +23,8 @@ class FragmentRecordingsNavigator @Inject constructor(
     override fun toPlayback(recordingName: String) {
         fragmentManager.commit {
             setReorderingAllowed(true)
-            replace<PlaybackFragment>(containerId, args = PlaybackFragment.bundle(recordingName))
+            val directions = PlaybackDirections(recordingName)
+            replace(containerId, directions.screen, directions.arguments)
             addToBackStack(null)
         }
     }

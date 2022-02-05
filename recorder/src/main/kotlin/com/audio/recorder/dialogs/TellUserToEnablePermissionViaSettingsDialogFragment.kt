@@ -4,9 +4,8 @@ import android.app.Dialog
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.DialogFragment
-import javax.inject.Inject
 
-internal class TellUserToEnablePermissionViaSettingsDialogFragment @Inject constructor(
+internal class TellUserToEnablePermissionViaSettingsDialogFragment(
     private val openAppSettings: OpenAppSettings
 ): DialogFragment() {
 

@@ -6,7 +6,6 @@ import androidx.core.net.toUri
 import com.audio.core.ui.ApplicationContext
 import com.audio.playback.player.MediaPlayerWrapper
 import com.audio.playback.player.wrap
-import javax.inject.Inject
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -23,7 +22,7 @@ internal interface PlaybackRepository {
     }
 }
 
-internal class MediaPlayerPlaybackRepository @Inject constructor(
+internal class MediaPlayerPlaybackRepository(
     private val context: ApplicationContext
 ) : PlaybackRepository {
     private var player: MediaPlayerWrapper? = null

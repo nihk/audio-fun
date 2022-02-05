@@ -1,13 +1,10 @@
 package com.audio.recorder.dialogs
 
-import dagger.hilt.android.scopes.FragmentScoped
-import javax.inject.Inject
+import com.audio.recorder.data.Event
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import com.audio.recorder.data.Event
 
-@FragmentScoped
-internal class DialogEventsMediator @Inject constructor() :
+internal class DialogEventsMediator :
     ExternalEvents,
     StopRecording,
     PermissionRationale,

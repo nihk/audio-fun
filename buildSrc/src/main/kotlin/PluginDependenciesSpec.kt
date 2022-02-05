@@ -8,9 +8,6 @@ val PluginDependenciesSpec.`android-application`: PluginDependencySpec
 val PluginDependenciesSpec.`android-library`: PluginDependencySpec
     get() = id(Plugins.androidLibrary)
 
-val PluginDependenciesSpec.hilt: PluginDependencySpec
-    get() = id(Plugins.daggerHilt)
-
 // ./gradlew dependencyUpdates
 val PluginDependenciesSpec.`ben-manes-versions`: PluginDependencySpec
     get() = id(Plugins.benManesVersions) version Versions.benManesVersions

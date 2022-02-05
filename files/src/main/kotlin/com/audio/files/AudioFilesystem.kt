@@ -8,11 +8,8 @@ import android.os.FileObserver
 import android.provider.MediaStore
 import android.util.Log
 import androidx.core.content.contentValuesOf
-import com.audio.core.di.AppCoroutineScope
-import com.audio.core.di.IoContext
 import com.audio.core.ui.ApplicationContext
 import java.io.File
-import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.awaitClose
@@ -32,10 +29,10 @@ interface AudioFilesystem {
     fun save(filename: Filename, newName: String, copyToMusicFolder: Boolean)
 }
 
-class AndroidAudioFilesystem @Inject constructor(
+class AndroidAudioFilesystem(
     private val context: ApplicationContext,
-    @IoContext private val ioContext: CoroutineContext,
-    @AppCoroutineScope private val appScope: CoroutineScope
+    private val ioContext: CoroutineContext,
+    private val appScope: CoroutineScope
 ) : AudioFilesystem {
     override fun tempFilename(name: String): Filename {
         return Filename(

@@ -1,7 +1,6 @@
 package com.audio.recordings.data
 
 import com.audio.files.AudioFilesystem
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -10,7 +9,7 @@ internal interface RecordingsRepository {
     fun delete(recording: Recording)
 }
 
-internal class FilesystemRecordingsRepository @Inject constructor(
+internal class FilesystemRecordingsRepository(
     private val filesystem: AudioFilesystem
 ) : RecordingsRepository {
     override fun recordings(): Flow<List<Recording>> {

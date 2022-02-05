@@ -60,23 +60,6 @@ object Dependencies {
         const val `material-icons-extended` = "androidx.compose.material:material-icons-extended:${Versions.compose}"
     }
 
-    object Dagger {
-        const val runtime = "com.google.dagger:dagger:${Versions.dagger}"
-        const val compiler = "com.google.dagger:dagger-compiler:${Versions.dagger}"
-
-        object Hilt {
-            const val plugin = "com.google.dagger:hilt-android-gradle-plugin:${Versions.dagger}"
-            const val runtime = "com.google.dagger:hilt-android:${Versions.dagger}"
-            const val testing = "com.google.dagger:hilt-android-testing:${Versions.dagger}"
-            const val compiler = "com.google.dagger:hilt-compiler:${Versions.dagger}"
-
-            object Jetpack {
-                const val lifecycleViewModel = "androidx.hilt:hilt-lifecycle-viewmodel:${Versions.hiltJetpack}"
-                const val compiler = "androidx.hilt:hilt-compiler:${Versions.hiltJetpack}"
-            }
-        }
-    }
-
     object Espresso {
         const val core = "androidx.test.espresso:espresso-core:${Versions.espresso}"
         const val idlingResource = "androidx.test.espresso:espresso-idling-resource:${Versions.espresso}"

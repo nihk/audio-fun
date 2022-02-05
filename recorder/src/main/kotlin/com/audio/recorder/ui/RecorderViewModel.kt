@@ -1,7 +1,11 @@
 package com.audio.recorder.ui
 
 import android.util.Log
+import androidx.lifecycle.AbstractSavedStateViewModelFactory
 import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.savedstate.SavedStateRegistryOwner
 import com.audio.core.mvi.MviViewModel
 import com.audio.recorder.data.Effect
 import com.audio.recorder.data.Event
@@ -10,8 +14,6 @@ import com.audio.recorder.data.RecorderRepository
 import com.audio.recorder.data.Result
 import com.audio.recorder.data.State
 import com.audio.recorder.data.TempFilenameHandle
-import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.flatMapLatest
@@ -21,8 +23,7 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.transformLatest
 
 // todo: need to clean up audioRepository when VM is cleared?
-@HiltViewModel
-internal class RecorderViewModel @Inject constructor(
+internal class RecorderViewModel(
     savedStateHandle: SavedStateHandle,
     private val recorderRepository: RecorderRepository,
     private val permissionsRepository: RecorderPermissionsRepository
@@ -181,5 +182,23 @@ internal class RecorderViewModel @Inject constructor(
 
     private fun Flow<Result.FinishedRecordingResult>.toFinishedRecordngEffects(): Flow<Effect> {
         return mapLatest { Effect.FinishedRecordingEffect }
+    }
+
+    class Factory(
+        private val recorderRepository: RecorderRepository,
+        private val permissionsRepository: RecorderPermissionsRepository
+    ) {
+        fun create(owner: SavedStateRegistryOwner): ViewModelProvider.Factory {
+            return object : AbstractSavedStateViewModelFactory(owner, null) {
+                override fun <T : ViewModel> create(
+                    key: String,
+                    modelClass: Class<T>,
+                    handle: SavedStateHandle
+                ): T {
+                    @Suppress("UNCHECKED_CAST")
+                    return RecorderViewModel(handle, recorderRepository, permissionsRepository) as T
+                }
+            }
+        }
     }
 }

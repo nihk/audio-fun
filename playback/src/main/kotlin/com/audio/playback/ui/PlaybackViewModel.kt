@@ -1,15 +1,16 @@
 package com.audio.playback.ui
 
+import androidx.lifecycle.AbstractSavedStateViewModelFactory
 import androidx.lifecycle.SavedStateHandle
-import com.audio.core.extensions.requireNotNull
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.savedstate.SavedStateRegistryOwner
 import com.audio.core.mvi.MviViewModel
 import com.audio.playback.data.Effect
 import com.audio.playback.data.Event
 import com.audio.playback.data.PlaybackRepository
 import com.audio.playback.data.Result
 import com.audio.playback.data.State
-import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.flatMapLatest
@@ -17,10 +18,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.transform
 
-@HiltViewModel
-internal class PlaybackViewModel @Inject constructor(
+internal class PlaybackViewModel(
     private val handle: SavedStateHandle,
-    private val repository: PlaybackRepository
+    private val repository: PlaybackRepository,
+    private val recordingName: String
 ) : MviViewModel<Event, Result, State, Effect>(State()) {
     override suspend fun onSubscription() {
         processEvent(Event.CreatePlayerEvent(start = true))
@@ -43,7 +44,6 @@ internal class PlaybackViewModel @Inject constructor(
 
     private fun Flow<Event.CreatePlayerEvent>.toCreatePlayerResults(): Flow<Result> {
         return flatMapLatest { event ->
-            val recordingName = handle.get<String>(PlaybackFragment.KEY_RECORDING_NAME).requireNotNull()
             repository.create(recordingName, event.start)
         }.map { emission ->
             when (emission) {
@@ -58,5 +58,25 @@ internal class PlaybackViewModel @Inject constructor(
         return merge(
             filterIsInstance<Result.EffectResult>().map { result -> result.effect }
         )
+    }
+
+    class Factory(
+        private val repository: PlaybackRepository,
+        private val recordingName: String
+    ) {
+        fun create(
+            owner: SavedStateRegistryOwner
+        ): ViewModelProvider.Factory {
+            return object : AbstractSavedStateViewModelFactory(owner, null) {
+                override fun <T : ViewModel> create(
+                    key: String,
+                    modelClass: Class<T>,
+                    handle: SavedStateHandle
+                ): T {
+                    @Suppress("UNCHECKED_CAST")
+                    return PlaybackViewModel(handle, repository, recordingName) as T
+                }
+            }
+        }
     }
 }

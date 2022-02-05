@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.audio.recorder.databinding.AmplitudeItemBinding
 import kotlin.math.roundToInt
 
-class AmplitudeAdapter : RecyclerView.Adapter<AmplitudeViewHolder>() {
+internal class AmplitudeAdapter : RecyclerView.Adapter<AmplitudeViewHolder>() {
     private val amplitudes = mutableListOf<Int>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AmplitudeViewHolder {

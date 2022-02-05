@@ -12,13 +12,12 @@ import com.audio.recorder.R
 import com.audio.recorder.databinding.SaveRecordingDialogFragmentBinding
 import com.audio.recorder.extensions.focusAndShowKeyboard
 import com.audio.recorder.extensions.textChanges
-import javax.inject.Inject
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 
-internal class SaveRecordingDialogFragment @Inject constructor(
+internal class SaveRecordingDialogFragment(
     private val saveRecording: SaveRecording
 ) : DialogFragment(R.layout.save_recording_dialog_fragment) {
 

@@ -16,7 +16,6 @@ object Versions {
     const val constraintLayout = "2.1.1"
     const val coreKtx = "1.7.0"
     const val coroutines = "1.6.0"
-    const val dagger = "2.40"
     const val dataStore = "1.0.0-alpha06"
     const val espresso = "3.5.0-alpha03"
     const val exoPlayer = "2.12.3"

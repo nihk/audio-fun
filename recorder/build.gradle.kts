@@ -1,9 +1,7 @@
 plugins {
     `android-library`
     kotlin("android")
-    kotlin("kapt")
     `kotlin-parcelize`
-    hilt
 }
 
 androidLibraryConfig()
@@ -20,15 +18,10 @@ dependencies {
     implementation(Dependencies.vectorDrawable)
     implementation(Dependencies.constraintLayout)
     implementation(Dependencies.material)
-    implementation(Dependencies.Dagger.runtime)
-    implementation(Dependencies.Dagger.Hilt.runtime)
     implementation(Dependencies.Lifecycle.runtime)
 
     debugImplementation(Dependencies.Fragment.testing)
 
     testImplementation(Dependencies.junit)
     defaultAndroidTestDependencies()
-
-    kapt(Dependencies.Dagger.compiler)
-    kapt(Dependencies.Dagger.Hilt.compiler)
 }
