@@ -20,13 +20,9 @@ class MainGraph(
         coreGraph = appGraph.coreGraph
     )
 
-    private val recorderGraph = RecorderGraph(
-        coreGraph = appGraph.coreGraph
-    )
+    private val recorderGraph = RecorderGraph(coreGraph = appGraph.coreGraph)
 
-    private val playbackGraph = PlaybackGraph(
-        coreGraph = appGraph.coreGraph
-    )
+    private val playbackGraph = PlaybackGraph(coreGraph = appGraph.coreGraph)
 
     val fragmentFactory = AppFragmentFactory(
         fragments = mapOf(

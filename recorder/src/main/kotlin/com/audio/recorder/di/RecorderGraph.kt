@@ -18,8 +18,6 @@ import com.audio.recorder.ui.RecorderViewModel
 class RecorderGraph(
     private val coreGraph: CoreGraph
 ) {
-    private val filesGraph = FilesGraph(coreGraph)
-
     val recorderFragment: Pair<Class<out Fragment>, () -> Fragment>
         get() {
             val dialogEventsMediator = DialogEventsMediator()
@@ -32,7 +30,7 @@ class RecorderGraph(
                                 context = coreGraph.appContext,
                                 ioContext = coreGraph.ioContext,
                                 timestamp = SystemTimestamp(),
-                                filesystem = filesGraph.audioFilesystem
+                                filesystem = FilesGraph(coreGraph).audioFilesystem
                             ),
                             permissionsRepository = AndroidRecorderPermissionsRepository(
                                 context = coreGraph.appContext

@@ -10,9 +10,8 @@ import com.audio.recordings.ui.RecordingsViewModel
 
 class RecordingsGraph(
     private val navigator: RecordingsNavigator,
-    coreGraph: CoreGraph
+    private val coreGraph: CoreGraph
 ) {
-    private val filesGraph = FilesGraph(coreGraph)
     val recordingsFragment: Pair<Class<out Fragment>, () -> Fragment> get() {
         return RecordingsFragment::class.java to {
             RecordingsFragment(
@@ -20,7 +19,7 @@ class RecordingsGraph(
                 viewModelFactory = { owner ->
                     RecordingsViewModel.Factory(
                         repository = FilesystemRecordingsRepository(
-                            filesystem = filesGraph.audioFilesystem
+                            filesystem = FilesGraph(coreGraph).audioFilesystem
                         )
                     ).create(owner)
                 }
