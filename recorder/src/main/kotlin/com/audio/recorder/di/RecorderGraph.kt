@@ -20,9 +20,9 @@ class RecorderGraph(
 ) {
     val recorderFragment: Pair<Class<out Fragment>, () -> Fragment>
         get() {
-            val dialogEventsMediator = DialogEventsMediator()
-
             return RecorderFragment::class.java to {
+                val dialogEventsMediator = DialogEventsMediator()
+
                 RecorderFragment(
                     viewModelFactory = { owner ->
                         RecorderViewModel.Factory(
